@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* ---- Dark-first design tokens (exposed as Tailwind utilities) ---- */
+@theme {
+  --color-bg: #0a0e16;
+  --color-surface: #121826;
+  --color-surface-2: #1a2234;
+  --color-border: #283246;
+  --color-text: #e8ebf2;
+  --color-muted: #8b97ac;
+  --color-faint: #5b6678;
+
+  --color-primary: #818cf8;
+  --color-primary-deep: #6366f1;
+  --color-accent: #f5b955;
+
+  --color-good: #4ade80;
+  --color-warn: #fbbf24;
+  --color-bad: #f87171;
+
+  /* Track colours */
+  --color-chopin: #f0a6c8;
+  --color-beethoven: #7dd3fc;
+  --color-common: #6ee7b7;
+  --color-neoclassical: #c4b5fd;
+
+  --radius-xl2: 1rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    margin: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+/* Reusable component classes */
+@layer components {
+  .card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl2);
+  }
+  .input {
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-text);
+    width: 100%;
+    outline: none;
+  }
+  .input:focus {
+    border-color: var(--color-primary);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.9rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background-color: var(--color-primary-deep);
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-primary);
+  }
+  .btn-ghost {
+    background-color: var(--color-surface-2);
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-border);
+  }
+}

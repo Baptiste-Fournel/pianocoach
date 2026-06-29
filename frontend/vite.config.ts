@@ -1,0 +1,20 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+
+// base is "/" for local dev + backend-served prod; the GitHub Pages workflow
+// sets VITE_BASE=/pianocoach/ so asset URLs resolve under the repo subpath.
+export default defineConfig({
+  base: process.env.VITE_BASE || "/",
+  plugins: [react(), tailwindcss()],
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": "http://localhost:8000",
+    },
+  },
+  build: {
+    outDir: "dist",
+    chunkSizeWarningLimit: 1200,
+  },
+});

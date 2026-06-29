@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, SQLModel, select
 
 from ..db import get_session
-from ..models import Hands, Scale, ScaleType
+from ..models import Hands, Scale, ScaleBpmLog, ScaleType
 
 router = APIRouter(prefix="/scales", tags=["scales"])
 
@@ -35,6 +35,28 @@ def list_scales(session: Session = Depends(get_session)):
     return session.exec(select(Scale).order_by(Scale.type, Scale.key)).all()
 
 
+@router.get("/bpm-history")
+def bpm_history(session: Session = Depends(get_session)):
+    """BPM history grouped per scale, ready for line charts."""
+    logs = session.exec(select(ScaleBpmLog).order_by(ScaleBpmLog.date, ScaleBpmLog.id)).all()
+    scales = {s.id: s for s in session.exec(select(Scale)).all()}
+    grouped: dict[int, dict] = {}
+    for log in logs:
+        sc = scales.get(log.scale_id)
+        g = grouped.setdefault(
+            log.scale_id,
+            {
+                "scale_id": log.scale_id,
+                "key": sc.key if sc else "?",
+                "type": sc.type.value if sc else "major",
+                "target_bpm": sc.target_bpm if sc else None,
+                "points": [],
+            },
+        )
+        g["points"].append({"date": log.date.isoformat(), "bpm": log.bpm})
+    return list(grouped.values())
+
+
 @router.post("", response_model=Scale, status_code=201)
 def create_scale(data: ScaleCreate, session: Session = Depends(get_session)):
     obj = Scale(**data.model_dump())
@@ -50,9 +72,12 @@ def update_scale(scale_id: int, data: ScaleUpdate, session: Session = Depends(ge
     if not obj:
         raise HTTPException(404, "Gamme introuvable")
     updates = data.model_dump(exclude_unset=True)
-    # Bumping the BPM counts as practising it today.
-    if "current_bpm" in updates and "last_practiced" not in updates:
-        updates["last_practiced"] = date.today()
+    # Bumping the BPM counts as practising it today + records a history point.
+    new_bpm = updates.get("current_bpm")
+    if "current_bpm" in updates and new_bpm is not None:
+        if "last_practiced" not in updates:
+            updates["last_practiced"] = date.today()
+        session.add(ScaleBpmLog(scale_id=scale_id, bpm=new_bpm))
     obj.sqlmodel_update(updates)
     session.add(obj)
     session.commit()

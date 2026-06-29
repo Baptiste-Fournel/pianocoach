@@ -133,6 +133,17 @@ class TempoLog(SQLModel, table=True):
     bpm_clean: int
 
 
+class ScaleBpmLog(SQLModel, table=True):
+    """History of a scale's clean BPM over time (for the evolution curve)."""
+
+    __tablename__ = "scale_bpm_log"
+
+    id: int | None = Field(default=None, primary_key=True)
+    scale_id: int = Field(foreign_key="scales.id", index=True)
+    date: dt.date = Field(default_factory=_today, index=True)
+    bpm: int
+
+
 class ReadingLog(SQLModel, table=True):
     __tablename__ = "reading_log"
 
