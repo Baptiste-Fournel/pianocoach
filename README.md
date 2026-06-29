@@ -107,7 +107,16 @@ PIANOCOACH_SELFTEST=1 uv run python -m desktop.main      # vérif headless (sans
 
 ### Packaging
 
-- **Niveau facile (fourni)** — double-clic : `PianoCoach.command` ouvre la fenêtre en réutilisant ton env `uv`. Aucun empaquetage de Python. Suffisant pour un usage perso. Pour un look « app », tu peux créer un raccourci Automator « Exécuter un script shell » → `cd … && ./scripts/desktop.sh`.
+- **Niveau facile (fourni) — vraie icône d'app** :
+  ```bash
+  ./scripts/build_app.sh        # génère l'icône, assemble PianoCoach.app, l'installe dans /Applications
+  ```
+  Crée un **`PianoCoach.app`** « fin » : une vraie icône (Finder / Launchpad / Dock) qui ouvre la fenêtre native au double-clic, **sans Terminal**, en réutilisant ton env `uv` (Python **non** empaqueté). Lance ensuite via Launchpad / Spotlight ou `open -a PianoCoach`.
+  - L'`.app` est **gitignoré** ; seule la logique de build (`scripts/build_app.sh` + `scripts/make_icon.py`) est versionnée.
+  - **Icône perso** : remplace le PNG 1024×1024 généré par `make_icon.py` (ou dépose le tien) et relance `build_app.sh`.
+  - L'icône du Dock **pendant l'exécution** est réglée au runtime (pyobjc, `PIANOCOACH_ICON`) ; sinon ce serait l'icône Python générique — purement cosmétique.
+  - Alternative ultra-simple sans `.app` : double-clic sur `PianoCoach.command`.
+- **Gatekeeper** : une app construite **localement** pour un usage perso s'ouvre sans souci. La **distribution** (l'envoyer à quelqu'un d'autre) exigerait **signature + notarisation** Apple — c'est le chemin « standalone » ci-dessous.
 - **Niveau difficile (non implémenté — sur demande)** — `.app` 100 % autonome distribuable (py2app/PyInstaller). Pièges connus : empaqueter Python + `librosa`/`numba`/`llvmlite` (hooks et `.dylib` à inclure à la main), embarquer un binaire **`ffmpeg`** et le retrouver au runtime, **signer + notariser** pour Gatekeeper, et une taille de plusieurs centaines de Mo. À ne lancer que si tu veux distribuer l'app — dis-le-moi.
 
 ---
@@ -177,8 +186,9 @@ pianocoach/
 ├── frontend/       Vite/React/TS · 13 pages · design system · client API typé
 ├── mcp_server/     serveur MCP stdio (lit/écrit la même base)
 ├── desktop/        launcher fenêtre native (pywebview) — main.py
-├── scripts/        setup.sh · dev.sh · desktop.sh
+├── scripts/        setup.sh · dev.sh · desktop.sh · build_app.sh · make_icon.py
 ├── PianoCoach.command   double-clic Finder → fenêtre native
+│                        (PianoCoach.app est généré par build_app.sh, gitignoré)
 ├── data/           SQLite + videos/  (gitignoré)
 └── .github/workflows/  ci.yml (lint+tests+build) · pages.yml (démo)
 ```

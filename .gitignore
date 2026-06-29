@@ -30,6 +30,9 @@ frontend/.vite/
 # Build output served by backend
 backend/static/
 
+# Built macOS app bundle (regenerate with scripts/build_app.sh)
+/PianoCoach.app/
+
 # OS / editor
 .DS_Store
 Thumbs.db

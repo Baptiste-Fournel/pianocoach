@@ -131,6 +131,23 @@ def _build_menu(window, base: str):
         return []
 
 
+def _set_dock_icon() -> None:
+    """Set the running app's Dock icon from PIANOCOACH_ICON (set by the .app
+    bundle launcher). Best-effort: without it, the Dock shows the generic Python
+    icon while running, which is purely cosmetic."""
+    icon = os.environ.get("PIANOCOACH_ICON")
+    if not icon or not Path(icon).exists():
+        return
+    try:
+        from AppKit import NSApplication, NSImage
+
+        img = NSImage.alloc().initByReferencingFile_(icon)
+        if img is not None:
+            NSApplication.sharedApplication().setApplicationIconImage_(img)
+    except Exception:  # noqa: BLE001 - cosmetic; never block startup
+        pass
+
+
 def main() -> int:
     ensure_frontend_built()
 
@@ -156,6 +173,7 @@ def main() -> int:
         min_size=(1024, 720),
     )
 
+    _set_dock_icon()
     menu = _build_menu(window, base)
     try:
         # webview.start() MUST run on the main thread (Cocoa requirement); the
