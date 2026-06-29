@@ -1,0 +1,39 @@
+# ---- PianoCoach: local-first, nothing personal committed ----
+
+# Local data (SQLite DB + uploaded videos + generated analysis artifacts)
+data/
+
+# Secrets
+.env
+.env.local
+*.env
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.so
+uv.lock.bak
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# Build output served by backend
+backend/static/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp

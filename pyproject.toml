@@ -1,0 +1,34 @@
+# uv workspace root. Backend + MCP server share one virtualenv and lockfile,
+# both pinned to Python 3.12 (librosa/numba ship reliable wheels there; the
+# host's Python 3.14 does not yet).
+[project]
+name = "pianocoach-workspace"
+version = "0.1.0"
+description = "PianoCoach — local-first, AI-assisted piano practice tracker"
+requires-python = ">=3.12,<3.13"
+
+[tool.uv.workspace]
+members = ["backend"]  # mcp_server added in step 4
+
+# Dev tooling shared across the workspace.
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.9",
+    "httpx>=0.28",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# B008: FastAPI relies on Depends()/Query()/File()/Form() in argument defaults.
+# UP042: (str, Enum) is the SQLModel-friendly idiom; StrEnum can shift ORM storage.
+ignore = ["E501", "B008", "UP042"]
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
+addopts = "-q"
