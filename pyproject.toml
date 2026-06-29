@@ -8,7 +8,10 @@ description = "PianoCoach — local-first, AI-assisted piano practice tracker"
 requires-python = ">=3.12,<3.13"
 
 [tool.uv.workspace]
-members = ["backend"]  # mcp_server added in step 4
+members = ["backend", "mcp_server"]
+
+[tool.uv.sources]
+pianocoach-backend = { workspace = true }
 
 # Dev tooling shared across the workspace.
 [dependency-groups]

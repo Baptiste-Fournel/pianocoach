@@ -156,8 +156,17 @@ def project_target(
         )
 
     measured = weekly_practice_hours(sessions, reference_date=reference_date)
-    weekly = measured if measured and measured > 0 else FALLBACK_WEEKLY_HOURS
     cons = consistency_factor(sessions, reference_date=reference_date)
+    # Blend the measured rate with a conservative prior when there's little
+    # history: a single logged session must not imply a decade-long ETA.
+    # Full trust in the measured rate only once ~8 days have been logged.
+    window_start = reference_date - timedelta(weeks=4)
+    practiced_days = len({s.date for s in sessions if window_start < s.date <= reference_date})
+    if measured and measured > 0:
+        confidence = min(1.0, practiced_days / 8.0)
+        weekly = confidence * measured + (1 - confidence) * FALLBACK_WEEKLY_HOURS
+    else:
+        weekly = FALLBACK_WEEKLY_HOURS
 
     weeks = remaining_hours / weekly if weekly > 0 else float("inf")
     # Band: with high consistency the estimate is tight; low consistency widens
@@ -173,7 +182,8 @@ def project_target(
     assumptions = [
         f"{HOURS_PER_DIFFICULTY:.0f} h de travail par point de difficulté (0→appris).",
         (
-            f"Rythme mesuré sur ~4 semaines : {weekly:.1f} h/semaine."
+            f"Rythme estimé : {weekly:.1f} h/semaine "
+            f"(mesuré {measured:.1f} h sur {practiced_days} jour(s) récents, lissé avec une hypothèse prudente)."
             if measured
             else f"Aucune séance loggée encore → hypothèse prudente de {weekly:.0f} h/semaine."
         ),

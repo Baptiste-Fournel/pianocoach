@@ -62,3 +62,16 @@ def test_project_target_uses_fallback_without_sessions():
     proj = pj.project_target(pieces[0], pieces, [], reference_date=ref)
     assert proj.weekly_hours == pj.FALLBACK_WEEKLY_HOURS
     assert proj.to_dict()["months_remaining"] > 0
+
+
+def test_sparse_data_does_not_explode_eta():
+    # A single short session must not collapse the weekly rate (regression):
+    # the measured 0.3 h/week is blended toward the conservative prior.
+    ref = date(2026, 6, 29)
+    pieces = [_piece("TARGET", 0, status="target", diff=9, progress=0)]
+    sessions = [pj.SessionLike(date=ref, duration_min=75)]  # one 75-min session
+    proj = pj.project_target(pieces[0], pieces, sessions, reference_date=ref)
+    # With 1 practiced day, confidence = 1/8: weekly stays close to the 7h prior.
+    assert proj.weekly_hours > 5.0
+    # Fantaisie-level (diff 9 ≈ 81h) at ~6h/week is months, not decades.
+    assert proj.to_dict()["months_remaining"] < 12

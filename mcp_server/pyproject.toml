@@ -1,0 +1,19 @@
+[project]
+name = "pianocoach-mcp"
+version = "0.1.0"
+description = "PianoCoach MCP server — exposes your practice data to Claude Desktop / Claude Code"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mcp>=1.2",
+    "pianocoach-backend",
+]
+
+[project.scripts]
+pianocoach-mcp = "pianocoach_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pianocoach_mcp"]
