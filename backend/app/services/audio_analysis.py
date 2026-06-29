@@ -126,12 +126,10 @@ def analyze_audio(wav_path: Path) -> dict:
     y, sr = librosa.load(str(wav_path), sr=22050, mono=True)
     duration = float(librosa.get_duration(y=y, sr=sr))
 
-    # Global + dynamic tempo
-    tempo = float(np.atleast_1d(librosa.feature.rhythm.tempo(y=y, sr=sr))[0])
+    # Global + dynamic tempo (librosa 0.11: librosa.feature.tempo)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr)
-    dyn_tempo = librosa.feature.rhythm.tempo(
-        onset_envelope=onset_env, sr=sr, aggregate=None
-    )
+    tempo = float(np.atleast_1d(librosa.feature.tempo(onset_envelope=onset_env, sr=sr))[0])
+    dyn_tempo = librosa.feature.tempo(onset_envelope=onset_env, sr=sr, aggregate=None)
     tempo_times = librosa.times_like(dyn_tempo, sr=sr).tolist()
     dyn_tempo_list = [float(x) for x in np.atleast_1d(dyn_tempo)]
 
