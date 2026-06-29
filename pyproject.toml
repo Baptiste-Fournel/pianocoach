@@ -6,6 +6,16 @@ name = "pianocoach-workspace"
 version = "0.1.0"
 description = "PianoCoach — local-first, AI-assisted piano practice tracker"
 requires-python = ">=3.12,<3.13"
+dependencies = [
+    # Native desktop window (WebKit via Cocoa). macOS-only marker so CI/Linux
+    # never installs it — the web mode, tests, and MCP server are unaffected.
+    "pywebview>=5.3 ; sys_platform == 'darwin'",
+]
+
+[tool.uv]
+# The workspace root is virtual: its dependencies are installed into the shared
+# env, but the root itself isn't built as a package.
+package = false
 
 [tool.uv.workspace]
 members = ["backend", "mcp_server"]

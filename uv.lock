@@ -59,6 +59,15 @@ wheels = [
 ]
 
 [[package]]
+name = "bottle"
+version = "0.13.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/71/cca6167c06d00c81375fd668719df245864076d284f7cb46a694cbeb5454/bottle-0.13.4.tar.gz", hash = "sha256:787e78327e12b227938de02248333d788cfe45987edca735f8f88e03472c3f47", size = 98717, upload-time = "2025-06-15T10:08:59.439Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/f6/b55ec74cfe68c6584163faa311503c20b0da4c09883a41e8e00d6726c954/bottle-0.13.4-py2.py3-none-any.whl", hash = "sha256:045684fbd2764eac9cdeb824861d1551d113e8b683d8d26e296898d3dd99a12e", size = 103807, upload-time = "2025-06-15T10:08:57.691Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.6.17"
 source = { registry = "https://pypi.org/simple" }
@@ -570,6 +579,9 @@ requires-dist = [
 name = "pianocoach-workspace"
 version = "0.1.0"
 source = { virtual = "." }
+dependencies = [
+    { name = "pywebview", marker = "sys_platform == 'darwin'" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -579,6 +591,7 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "pywebview", marker = "sys_platform == 'darwin'", specifier = ">=5.3" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -618,6 +631,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/83/43/85ef45e8b36c6a485
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl", hash = "sha256:f265597baa9f760d25ceb29d0beb8186c243d6607b0f60b83ecf14078dbc703b", size = 67175, upload-time = "2026-01-30T19:15:08.36Z" },
 ]
+
+[[package]]
+name = "proxy-tools"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f2/cf/77d3e19b7fabd03895caca7857ef51e4c409e0ca6b37ee6e9f7daa50b642/proxy_tools-0.1.0.tar.gz", hash = "sha256:ccb3751f529c047e2d8a58440d86b205303cf0fe8146f784d1cbcd94f0a28010", size = 2978, upload-time = "2014-05-05T21:02:24.606Z" }
 
 [[package]]
 name = "pyasn1"
@@ -732,6 +751,79 @@ crypto = [
 ]
 
 [[package]]
+name = "pyobjc-core"
+version = "12.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/b1/729f7458a63758bd21716648a8abcd9a0c8f2d2e9897763c8a1a1c7fd31b/pyobjc_core-12.2.1.tar.gz", hash = "sha256:7a7b9b018402342cf32bf1956366896350fbe5c0478cb3ef59778f77abed7f07", size = 1063383, upload-time = "2026-06-19T16:19:39.357Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/88/300ad283bed0c971c52dcac6f70113e138169d4ce6d856ddd03d16081e51/pyobjc_core-12.2.1-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:a64232bb27ed101d4adc7d42b0e64a6d3331aac7bee7861c037a6777a163f10b", size = 6433347, upload-time = "2026-06-19T16:04:49.341Z" },
+]
+
+[[package]]
+name = "pyobjc-framework-cocoa"
+version = "12.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyobjc-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/51/34/fbe38a204643aa4e1b91391cdce07a34da565a69171ebcad08de7438a556/pyobjc_framework_cocoa-12.2.1.tar.gz", hash = "sha256:b94b37fe5730e5ae1fb0052912cd174e6ec329b0bfba4a012ae5db1014b5864b", size = 3125751, upload-time = "2026-06-19T16:20:05.159Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/cf/1b3b32b2f28f66cc053c3438ef4e6df36a1591945bf05e7399da18d74553/pyobjc_framework_cocoa-12.2.1-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:28b9b8bab1c36efb94744786918752d0c1842f5fbb67e7d5ca97b5f736512080", size = 388113, upload-time = "2026-06-19T16:07:38.9Z" },
+]
+
+[[package]]
+name = "pyobjc-framework-quartz"
+version = "12.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3b/f6/2a8b84dbf1fe7c04dd96ea73d991678d4e09a909f51971ecc51629bb2ab4/pyobjc_framework_quartz-12.2.1.tar.gz", hash = "sha256:b3b8b6f71e66147f8ff9e6213864cc8527e3a0b1ee90835b93ce221f4802d9b0", size = 3215521, upload-time = "2026-06-19T16:21:30.199Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/14/fc/d7c7b3134cdbd1a487f3f77b5be125d87a6c9e7d9411035739d99335cc0c/pyobjc_framework_quartz-12.2.1-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:de9c8cca7e95290c8d540466af11c7cdfe3a5458e6f56c34006d5b45243f9ed9", size = 219000, upload-time = "2026-06-19T16:16:04.29Z" },
+]
+
+[[package]]
+name = "pyobjc-framework-security"
+version = "12.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/b8/4267b802d8dba6de468e7d0765b05cc4e146fa376ed9f55e0b6461016bef/pyobjc_framework_security-12.2.1.tar.gz", hash = "sha256:d7831b1537f4346892e7f2f0e2b09d79bee98919b0767f4061278d0e03028f2d", size = 181065, upload-time = "2026-06-19T16:21:40.151Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/5b/2719bc4062e6c27083191fd20e365ae02d0bf1c22f4d1a88211e3d96b369/pyobjc_framework_security-12.2.1-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:76ff6e44e62d3e15651540493879bf16687d862c4f10f3cadade757811c8b8d0", size = 41300, upload-time = "2026-06-19T16:17:17.702Z" },
+]
+
+[[package]]
+name = "pyobjc-framework-uniformtypeidentifiers"
+version = "12.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/74/a1/108fa1e5a3dd8aff626f98fb97de370323b290404b04ffa2ef9420665ed3/pyobjc_framework_uniformtypeidentifiers-12.2.1.tar.gz", hash = "sha256:1fb89d13aa3c2df8e6d6536f6df3493fe5a6caefd2a5adebf17c5af3b29ed4a2", size = 20679, upload-time = "2026-06-19T16:21:55.739Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e3/44/18a7b3c3b4f9f6784fddf64ed5a2c148577d0300705a50e8ab81da8fc71d/pyobjc_framework_uniformtypeidentifiers-12.2.1-py2.py3-none-any.whl", hash = "sha256:ea08413ad895a7dfea13670e26548bcf5b00154084cdfb5d8f96603320e77cf3", size = 5042, upload-time = "2026-06-19T16:18:54.085Z" },
+]
+
+[[package]]
+name = "pyobjc-framework-webkit"
+version = "12.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/11/d2/b230c594f70ecb970b4cef67bae2648d1bfa5b381e9b7e3710bf24ec8887/pyobjc_framework_webkit-12.2.1.tar.gz", hash = "sha256:a56acae55b50d549b20dff2921ad1099add8fbc377d0de09ddc2ba50957f7def", size = 332374, upload-time = "2026-06-19T16:22:01.988Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/47/7a2099eb2e062c6230a9440f1795cf34056ca5e16ef25c8aad7c059b8734/pyobjc_framework_webkit-12.2.1-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:7e04dcc08cdc59380113ea1232af75a0a04c2426418ebe967b4c0045c973f776", size = 50372, upload-time = "2026-06-19T16:19:31.581Z" },
+]
+
+[[package]]
 name = "pytest"
 version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -763,6 +855,26 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/5b/42/55c32bb9b12693c092ad250a0e82edb5b31ddeda6eb772de5f308b3804ad/python_multipart-0.0.32.tar.gz", hash = "sha256:be54b7f3fa167bb83e4fcd936b887b708f4e57fe75911c02aebf53efaf8d938e", size = 46881, upload-time = "2026-06-04T16:18:58.647Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl", hash = "sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23", size = 30042, upload-time = "2026-06-04T16:18:57.319Z" },
+]
+
+[[package]]
+name = "pywebview"
+version = "6.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "bottle" },
+    { name = "proxy-tools" },
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
+    { name = "pyobjc-framework-quartz" },
+    { name = "pyobjc-framework-security" },
+    { name = "pyobjc-framework-uniformtypeidentifiers" },
+    { name = "pyobjc-framework-webkit" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/4a/05307135dafba67778669d194bd1a3822a7685ec9ee8a6d7e70856c1a551/pywebview-6.2.1.tar.gz", hash = "sha256:71b7136752e40824655304d938efb62014218d1a90bd8e87e1cbdb1ce9c466af", size = 513126, upload-time = "2026-04-15T09:02:16.595Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/25/9491695c22c4842c5b3903b4dc172e0eecf67a27c0af34a71512c9b76a0a/pywebview-6.2.1-py3-none-any.whl", hash = "sha256:9d07275f53894ab4d5e2e0e996227193e7187dec276d9b624dccbce029216b46", size = 525463, upload-time = "2026-04-15T09:02:10.186Z" },
 ]
 
 [[package]]

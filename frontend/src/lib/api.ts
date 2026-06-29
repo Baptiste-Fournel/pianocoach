@@ -16,7 +16,10 @@ import type {
 } from "../types";
 
 export const DEMO = import.meta.env.VITE_DEMO === "true";
-const BASE = "/api";
+// Same-origin by default ("/api"): works in dev (Vite proxies /api → :8000),
+// in backend-served prod, and in the native desktop window (dynamic port, no
+// CORS). VITE_API_BASE can override to point at a remote backend.
+const BASE = (import.meta.env.VITE_API_BASE ?? "") + "/api";
 
 export class ApiError extends Error {
   status: number;

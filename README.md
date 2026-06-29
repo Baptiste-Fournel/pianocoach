@@ -86,6 +86,32 @@ La clé Gemini se règle dans l'app (**Réglages**) ou dans le fichier `.env` (`
 
 ---
 
+## Application desktop (fenêtre native)
+
+Pour ouvrir PianoCoach comme une **vraie app**, sans onglet de navigateur (fenêtre WebKit native via [pywebview](https://pywebview.flowrl.com/)) :
+
+```bash
+./scripts/desktop.sh           # build si besoin, puis ouvre la fenêtre
+```
+
+Ou **double-clique `PianoCoach.command`** dans le Finder (niveau « facile », voir Packaging plus bas).
+
+Comment ça marche : le launcher (`desktop/main.py`) choisit un **port libre sur `127.0.0.1`** (jamais exposé sur le réseau), lance le backend FastAPI dans un thread, attend `/api/health`, puis ouvre la fenêtre Cocoa. Fermer la fenêtre **arrête proprement** uvicorn. Le mode web (`scripts/dev.sh`), les tests et le serveur MCP sont inchangés.
+
+```bash
+PIANOCOACH_DEBUG=1 ./scripts/desktop.sh                 # active les devtools de la webview
+PIANOCOACH_SELFTEST=1 uv run python -m desktop.main      # vérif headless (sans fenêtre)
+```
+
+> Le launcher **doit** tourner dans l'env `uv` Python 3.12 (où pywebview/pyobjc sont installés), d'où `uv run`. `pywebview` est une dépendance **macOS uniquement** (marqueur `sys_platform == 'darwin'`) : la CI Linux ne l'installe jamais.
+
+### Packaging
+
+- **Niveau facile (fourni)** — double-clic : `PianoCoach.command` ouvre la fenêtre en réutilisant ton env `uv`. Aucun empaquetage de Python. Suffisant pour un usage perso. Pour un look « app », tu peux créer un raccourci Automator « Exécuter un script shell » → `cd … && ./scripts/desktop.sh`.
+- **Niveau difficile (non implémenté — sur demande)** — `.app` 100 % autonome distribuable (py2app/PyInstaller). Pièges connus : empaqueter Python + `librosa`/`numba`/`llvmlite` (hooks et `.dylib` à inclure à la main), embarquer un binaire **`ffmpeg`** et le retrouver au runtime, **signer + notariser** pour Gatekeeper, et une taille de plusieurs centaines de Mo. À ne lancer que si tu veux distribuer l'app — dis-le-moi.
+
+---
+
 ## Connexion MCP (coaching via Claude — sans coût API)
 
 Le serveur MCP expose mes données à Claude, qui peut alors me conseiller en lisant tout en direct, sans rien re-saisir, **couvert par mon abonnement** (pas d'appel API facturé).
@@ -150,7 +176,9 @@ pianocoach/
 │                   analyse audio, Gemini) · seed (§profil) · tests
 ├── frontend/       Vite/React/TS · 13 pages · design system · client API typé
 ├── mcp_server/     serveur MCP stdio (lit/écrit la même base)
-├── scripts/        setup.sh · dev.sh
+├── desktop/        launcher fenêtre native (pywebview) — main.py
+├── scripts/        setup.sh · dev.sh · desktop.sh
+├── PianoCoach.command   double-clic Finder → fenêtre native
 ├── data/           SQLite + videos/  (gitignoré)
 └── .github/workflows/  ci.yml (lint+tests+build) · pages.yml (démo)
 ```
