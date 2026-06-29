@@ -104,14 +104,18 @@ claude mcp add pianocoach -- uv run --directory /Users/baptiste/pianocoach piano
 {
   "mcpServers": {
     "pianocoach": {
-      "command": "uv",
+      "command": "/opt/homebrew/bin/uv",
       "args": ["run", "--directory", "/Users/baptiste/pianocoach", "pianocoach-mcp"]
     }
   }
 }
 ```
 
-Redémarre Claude Desktop. Outils disponibles :
+> ⚠️ Utilise le **chemin absolu** vers `uv` (`which uv`). Claude Desktop lance les
+> serveurs MCP sans le `PATH` de ton shell, donc un simple `"uv"` échoue souvent
+> par « command not found ».
+
+Redémarre Claude Desktop (Cmd+Q puis rouvre). Outils disponibles :
 
 | Lecture | Écriture (confirmation demandée) |
 |---------|----------------------------------|
