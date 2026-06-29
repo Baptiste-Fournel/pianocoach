@@ -62,6 +62,25 @@ class GeminiNotConfigured(RuntimeError):
     pass
 
 
+# Transient errors common on the free tier — worth a few retries with backoff.
+_TRANSIENT = ("503", "UNAVAILABLE", "429", "RESOURCE_EXHAUSTED", "500", "INTERNAL")
+
+
+def _generate_with_retry(client, *, model, contents, config, attempts: int = 4):
+    last_exc: Exception | None = None
+    for i in range(attempts):
+        try:
+            return client.models.generate_content(model=model, contents=contents, config=config)
+        except Exception as e:  # noqa: BLE001 - inspect message to decide retry
+            last_exc = e
+            msg = str(e)
+            if i < attempts - 1 and any(t in msg for t in _TRANSIENT):
+                time.sleep(2 * (i + 1))  # 2s, 4s, 6s
+                continue
+            raise
+    raise last_exc  # pragma: no cover
+
+
 def _client():
     if not settings.gemini_enabled:
         raise GeminiNotConfigured(
@@ -91,7 +110,8 @@ def chat(history: list[dict], data_summary: str = "") -> str:
             types.Content(role=role, parts=[types.Part.from_text(text=m["content"])])
         )
 
-    resp = client.models.generate_content(
+    resp = _generate_with_retry(
+        client,
         model=settings.gemini_model,
         contents=contents,
         config=types.GenerateContentConfig(system_instruction=system, temperature=0.7),
@@ -140,7 +160,8 @@ def analyze_video(video_path: Path, metrics: dict | None = None, piece_title: st
         raise RuntimeError("Gemini n'a pas pu traiter la vidéo.")
 
     prompt = _coaching_prompt(metrics, piece_title)
-    resp = client.models.generate_content(
+    resp = _generate_with_retry(
+        client,
         model=settings.gemini_model,
         contents=[uploaded, prompt],
         config=types.GenerateContentConfig(
