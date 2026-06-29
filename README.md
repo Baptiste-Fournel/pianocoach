@@ -8,6 +8,8 @@ Objectifs cibles : la *Fantaisie-impromptu* de Chopin et le 3ᵉ mouvement de la
 
 > **Tout reste sur ma machine.** La base de données et les vidéos ne quittent jamais le PC. Seuls le chat coach et (optionnellement) l'analyse vidéo IA appellent l'API Gemini — et l'analyse vidéo peut être désactivée d'un interrupteur.
 
+📖 **Guide détaillé de chaque fonctionnalité (usage + calculs) :** [docs/FEATURES.md](docs/FEATURES.md)
+
 ---
 
 ## Fonctionnalités
