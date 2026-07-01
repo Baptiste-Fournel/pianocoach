@@ -10,6 +10,7 @@ import Milestones from "./pages/Milestones";
 import Generator from "./pages/Generator";
 import Polyrhythm from "./pages/Polyrhythm";
 import Piano from "./pages/Piano";
+import Solfege from "./pages/Solfege";
 import Resources from "./pages/Resources";
 import Coach from "./pages/Coach";
 import Videos from "./pages/Videos";
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="seance" element={<Generator />} />
         <Route path="polyrythmie" element={<Polyrhythm />} />
         <Route path="piano" element={<Piano />} />
+        <Route path="solfege" element={<Solfege />} />
         <Route path="ressources" element={<Resources />} />
         <Route path="coach" element={<Coach />} />
         <Route path="videos" element={<Videos />} />
