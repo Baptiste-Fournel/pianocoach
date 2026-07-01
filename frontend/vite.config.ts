@@ -11,7 +11,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:8000",
+      // ws:true so the MIDI WebSocket (/api/midi/stream) also proxies in dev.
+      "/api": { target: "http://localhost:8000", ws: true },
     },
   },
   build: {

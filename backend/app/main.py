@@ -19,6 +19,7 @@ from .routers import (
     chat,
     dashboard,
     generator,
+    midi,
     milestones,
     pieces,
     reading,
@@ -66,6 +67,7 @@ for r in (
     settings_router.router,
     chat.router,
     videos.router,
+    midi.router,
 ):
     api.include_router(r)
 
