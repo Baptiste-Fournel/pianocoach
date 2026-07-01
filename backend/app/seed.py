@@ -90,6 +90,24 @@ _PIECES: list[dict] = [
 # --------------------------------------------------------------------------- #
 # Scales — starting set (majors), to follow
 # --------------------------------------------------------------------------- #
+# Skills each seeded piece develops (ids match the frontend taxonomy).
+_SKILLS: dict[str, list[str]] = {
+    "Prélude op. 28 n° 7 (La majeur)": ["reading_treble", "voicing", "pedaling"],
+    "Prélude op. 28 n° 6 (Si mineur)": ["reading_bass", "voicing", "pedaling"],
+    "Prélude op. 28 n° 4 (Mi mineur)": ["voicing", "reading_bass", "pedaling"],
+    "Prélude op. 28 n° 20 (Do mineur)": ["voicing", "reading_bass", "pedaling"],
+    "Prélude op. 28 n° 15 « Raindrop » (Réb majeur)": ["endurance", "voicing", "pedaling"],
+    "Nocturne op. 9 n° 2 (Mib majeur)": ["voicing", "pedaling", "reading_treble"],
+    "Valse op. 69 n° 2 (Si mineur)": ["velocity", "reading_treble", "pedaling"],
+    "Fantaisie-impromptu op. 66": ["polyrhythm_4v3", "velocity", "endurance"],
+    "Sonate « Clair de lune » op. 27 n° 2 — 1er mvt": ["voicing", "pedaling", "endurance"],
+    "Für Elise (WoO 59)": ["reading_treble", "velocity"],
+    "Sonate « Pathétique » op. 13 — 2e mvt (Adagio cantabile)": ["voicing", "pedaling", "reading_bass"],
+    "Sonate « Clair de lune » op. 27 n° 2 — 3e mvt (Presto agitato)": ["velocity", "endurance", "reading_bass"],
+    "Clementi — Sonatines op. 36": ["reading_treble", "reading_bass", "velocity", "classical_clarity"],
+    "Bach — Petit Livre d'Anna Magdalena": ["reading_bass", "reading_treble", "voicing", "classical_clarity"],
+}
+
 _SCALE_KEYS = ["C", "G", "D", "A", "F"]
 
 
@@ -126,10 +144,10 @@ def seed(session: Session | None = None) -> dict[str, int]:
 
     inserted: dict[str, int] = {}
     try:
-        # Pieces
+        # Pieces (tagged with the skills they develop — see _SKILLS)
         if not session.exec(select(Piece)).first():
             for i, p in enumerate(_PIECES):
-                session.add(Piece(order_index=i, **p))
+                session.add(Piece(order_index=i, skills=_SKILLS.get(p["title"], []), **p))
             inserted["pieces"] = len(_PIECES)
 
         # Scales

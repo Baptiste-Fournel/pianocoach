@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import {
   Activity,
+  BarChart3,
   BookOpen,
   CalendarCheck,
   Gauge,
@@ -27,6 +28,7 @@ const NAV = [
   { to: "/tempo", label: "Tempo par passage", icon: Gauge },
   { to: "/lecture", label: "Lecture", icon: BookOpen },
   { to: "/jalons", label: "Jalons & jauges", icon: Target },
+  { to: "/competences", label: "Compétences", icon: BarChart3 },
   { to: "/seance", label: "Séance du jour", icon: CalendarCheck },
   { to: "/polyrythmie", label: "Polyrythmie", icon: Activity },
   { to: "/piano", label: "Piano (MIDI)", icon: Piano },

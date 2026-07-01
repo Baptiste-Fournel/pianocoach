@@ -52,6 +52,7 @@ def _piece_dict(p: Piece) -> dict:
         "progress_pct": p.progress_pct,
         "target_tempo": p.target_tempo,
         "current_clean_tempo": p.current_clean_tempo,
+        "skills": p.skills,
         "notes": p.notes,
     }
 

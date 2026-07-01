@@ -25,6 +25,7 @@ _engine: Engine | None = None
 # Each entry: (table, column, column DDL incl. type + default).
 _ADDITIVE_COLUMNS: list[tuple[str, str, str]] = [
     ("pieces", "loved", "BOOLEAN NOT NULL DEFAULT 0"),
+    ("pieces", "skills", "TEXT NOT NULL DEFAULT '[]'"),  # JSON list of skill ids
 ]
 
 

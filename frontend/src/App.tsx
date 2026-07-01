@@ -7,6 +7,7 @@ import Scales from "./pages/Scales";
 import Tempo from "./pages/Tempo";
 import Reading from "./pages/Reading";
 import Milestones from "./pages/Milestones";
+import Skills from "./pages/Skills";
 import Generator from "./pages/Generator";
 import Polyrhythm from "./pages/Polyrhythm";
 import Piano from "./pages/Piano";
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="tempo" element={<Tempo />} />
         <Route path="lecture" element={<Reading />} />
         <Route path="jalons" element={<Milestones />} />
+        <Route path="competences" element={<Skills />} />
         <Route path="seance" element={<Generator />} />
         <Route path="polyrythmie" element={<Polyrhythm />} />
         <Route path="piano" element={<Piano />} />

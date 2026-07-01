@@ -23,6 +23,7 @@ class PieceCreate(SQLModel):
     target_tempo: int | None = Field(default=None, ge=1)
     current_clean_tempo: int | None = Field(default=None, ge=0)
     loved: bool = False
+    skills: list[str] = []
     notes: str = ""
 
 
@@ -39,6 +40,7 @@ class PieceUpdate(SQLModel):
     current_clean_tempo: int | None = Field(default=None, ge=0)
     order_index: int | None = None
     loved: bool | None = None
+    skills: list[str] | None = None
     notes: str | None = None
 
 

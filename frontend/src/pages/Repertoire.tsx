@@ -18,6 +18,7 @@ import { GripVertical, Heart, Pencil, Plus, Target, Trash2 } from "lucide-react"
 import { Badge, Button, Field, Modal, PageHeader, ProgressBar, Spinner } from "../components/ui";
 import { usePieceMutations, usePieces } from "../lib/queries";
 import { STATUS, TRACKS, frenchDate } from "../lib/format";
+import { SKILLS } from "../lib/skills";
 import type { Piece, PieceStatus, Track } from "../types";
 
 const TRACK_ORDER: Track[] = ["chopin", "beethoven", "common", "neoclassical"];
@@ -219,8 +220,15 @@ function PieceModal({ piece, onClose }: { piece: Piece | null; onClose: () => vo
     progress_pct: piece?.progress_pct ?? 0,
     target_tempo: piece?.target_tempo ?? 0,
     current_clean_tempo: piece?.current_clean_tempo ?? 0,
+    skills: piece?.skills ?? ([] as string[]),
     notes: piece?.notes ?? "",
   });
+
+  const toggleSkill = (id: string) =>
+    setForm((f) => ({
+      ...f,
+      skills: f.skills.includes(id) ? f.skills.filter((x) => x !== id) : [...f.skills, id],
+    }));
 
   function submit() {
     if (!form.title.trim()) return;
@@ -233,6 +241,7 @@ function PieceModal({ piece, onClose }: { piece: Piece | null; onClose: () => vo
       progress_pct: Number(form.progress_pct),
       target_tempo: Number(form.target_tempo) || null,
       current_clean_tempo: Number(form.current_clean_tempo) || null,
+      skills: form.skills,
       notes: form.notes,
     };
     if (piece) update.mutate({ id: piece.id, b: body }, { onSuccess: onClose });
@@ -284,6 +293,29 @@ function PieceModal({ piece, onClose }: { piece: Piece | null; onClose: () => vo
         </div>
         <Field label="Tempo propre actuel (BPM)">
           <input type="number" className="input" value={form.current_clean_tempo} onChange={set("current_clean_tempo")} />
+        </Field>
+        <Field label="Compétences développées">
+          <div className="flex flex-wrap gap-1.5">
+            {SKILLS.map((s) => {
+              const on = form.skills.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => toggleSkill(s.id)}
+                  title={s.hint}
+                  className={
+                    "rounded-full px-2.5 py-1 text-xs border transition-colors " +
+                    (on
+                      ? "border-primary bg-primary-deep/30 text-text"
+                      : "border-border bg-surface-2 text-muted hover:text-text")
+                  }
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
         </Field>
         <Field label="Notes">
           <textarea className="input" rows={2} value={form.notes} onChange={set("notes")} />

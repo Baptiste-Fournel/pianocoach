@@ -95,6 +95,9 @@ class Piece(SQLModel, table=True):
     current_clean_tempo: int | None = Field(default=None, description="cleanest BPM today")
     order_index: int = Field(default=0, index=True, description="manual ordering within a track")
     loved: bool = Field(default=False, description="pièce que j'aime jouer (pour les recommandations)")
+    skills: list[str] = Field(
+        default_factory=list, sa_column=Column(JSON), description="compétences développées (ids)"
+    )
     notes: str = ""
 
 

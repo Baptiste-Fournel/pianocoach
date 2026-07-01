@@ -29,6 +29,7 @@ export interface Piece {
   current_clean_tempo: number | null;
   order_index: number;
   loved: boolean;
+  skills: string[];
   notes: string;
 }
 
