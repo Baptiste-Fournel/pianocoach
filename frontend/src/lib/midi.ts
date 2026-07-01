@@ -41,3 +41,38 @@ export function noteNameShort(note: number): string {
 export function isBlackKey(note: number): boolean {
   return BLACK_PITCH_CLASSES.has(pitchClass(note));
 }
+
+// --- Keyboard layout (shared by the compact display, the 88-key display, and
+// the clickable fallback in the solfège trainer). Convention confirmed:
+// Do4 = middle C = MIDI 60, La4 = A440 = MIDI 69 → La0 = 21, Do8 = 108.
+export const FULL_KEYBOARD = { low: 21, high: 108 }; // A0 → C8 (the full 88 keys)
+export const COMPACT_KEYBOARD = { low: 36, high: 84 }; // Do2 → Do6 (compact display)
+
+export interface KeyboardLayout {
+  whites: number[];
+  blacks: number[];
+  whiteWidthPct: number; // width of one white key as a % of the container
+}
+
+export function keyboardLayout(low: number, high: number): KeyboardLayout {
+  const whites: number[] = [];
+  const blacks: number[] = [];
+  for (let n = low; n <= high; n++) (isBlackKey(n) ? blacks : whites).push(n);
+  return { whites, blacks, whiteWidthPct: whites.length ? 100 / whites.length : 0 };
+}
+
+/** Left offset (%) of the i-th white key. */
+export function whiteLeftPct(whiteIndex: number, layout: KeyboardLayout): number {
+  return whiteIndex * layout.whiteWidthPct;
+}
+
+/** Left offset (%) of a black key — straddling the gap after the whites below it. */
+export function blackLeftPct(note: number, layout: KeyboardLayout): number {
+  const whitesBefore = layout.whites.filter((w) => w < note).length;
+  return whitesBefore * layout.whiteWidthPct - layout.whiteWidthPct * 0.32;
+}
+
+/** Which display range to show: full 88 keys when a piano is connected. */
+export function displayRange(connected: boolean): { low: number; high: number } {
+  return connected ? FULL_KEYBOARD : COMPACT_KEYBOARD;
+}

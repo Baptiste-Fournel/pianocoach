@@ -3,7 +3,7 @@ import { Cable, RefreshCw } from "lucide-react";
 import { PageHeader, Card, SectionTitle, Button, Badge, Empty } from "../components/ui";
 import { PianoKeyboard } from "../components/PianoKeyboard";
 import { useMidiStatus, useMidiStream } from "../lib/useMidi";
-import { noteName } from "../lib/midi";
+import { displayRange, noteName } from "../lib/midi";
 import { DEMO } from "../lib/api";
 
 export default function Piano() {
@@ -96,8 +96,18 @@ export default function Piano() {
           </Card>
 
           <Card>
-            <SectionTitle title="Clavier en direct" subtitle="Joue quelques notes : elles s'allument ici." />
-            <PianoKeyboard active={active} low={36} high={84} />
+            <SectionTitle
+              title="Clavier en direct"
+              subtitle={
+                connected
+                  ? "Clavier complet 88 touches (La0 → Do8) — joue n'importe où, la note s'allume à sa place."
+                  : "Clavier compact. Il passe en 88 touches dès que le piano est connecté."
+              }
+            />
+            {(() => {
+              const range = displayRange(connected);
+              return <PianoKeyboard active={active} low={range.low} high={range.high} height={connected ? 168 : 150} />;
+            })()}
             <div className="mt-4">
               <div className="text-xs uppercase tracking-wide text-muted mb-2">Dernières notes</div>
               {log.length === 0 ? (
