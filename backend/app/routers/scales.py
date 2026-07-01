@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Field, Session, SQLModel, select
 
 from ..db import get_session
 from ..models import Hands, Scale, ScaleBpmLog, ScaleType
@@ -15,8 +15,8 @@ class ScaleCreate(SQLModel):
     key: str
     type: ScaleType = ScaleType.major
     hands: Hands = Hands.separate
-    current_bpm: int | None = None
-    target_bpm: int = 120
+    current_bpm: int | None = Field(default=None, ge=0)
+    target_bpm: int = Field(default=120, ge=1)
     mastered: bool = False
 
 
@@ -24,8 +24,8 @@ class ScaleUpdate(SQLModel):
     key: str | None = None
     type: ScaleType | None = None
     hands: Hands | None = None
-    current_bpm: int | None = None
-    target_bpm: int | None = None
+    current_bpm: int | None = Field(default=None, ge=0)
+    target_bpm: int | None = Field(default=None, ge=1)
     mastered: bool | None = None
     last_practiced: date | None = None
 
@@ -90,5 +90,9 @@ def delete_scale(scale_id: int, session: Session = Depends(get_session)):
     obj = session.get(Scale, scale_id)
     if not obj:
         raise HTTPException(404, "Gamme introuvable")
+    # Remove the scale's BPM history first (no ON DELETE rule in the schema).
+    for log in session.exec(select(ScaleBpmLog).where(ScaleBpmLog.scale_id == scale_id)).all():
+        session.delete(log)
+    session.flush()  # apply child deletes before removing the parent (FK order)
     session.delete(obj)
     session.commit()

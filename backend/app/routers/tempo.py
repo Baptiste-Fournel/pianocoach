@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Field, Session, SQLModel, select
 
 from ..db import get_session
 from ..models import Piece, TempoLog
@@ -14,8 +14,24 @@ router = APIRouter(prefix="/tempo", tags=["tempo"])
 class TempoCreate(SQLModel):
     piece_id: int
     passage_label: str = ""
-    bpm_clean: int
+    bpm_clean: int = Field(ge=1)
     date: dt.date | None = None
+
+
+class TempoUpdate(SQLModel):
+    passage_label: str | None = None
+    bpm_clean: int | None = Field(default=None, ge=1)
+    date: dt.date | None = None
+
+
+def _resync_clean_tempo(session: Session, piece_id: int) -> None:
+    """Set the piece's current_clean_tempo to the max of its logs (or None)."""
+    piece = session.get(Piece, piece_id)
+    if not piece:
+        return
+    values = session.exec(select(TempoLog.bpm_clean).where(TempoLog.piece_id == piece_id)).all()
+    piece.current_clean_tempo = max(values) if values else None
+    session.add(piece)
 
 
 @router.get("", response_model=list[TempoLog])
@@ -35,11 +51,20 @@ def log_tempo(data: TempoCreate, session: Session = Depends(get_session)):
         payload["date"] = dt.date.today()
     obj = TempoLog(**payload)
     session.add(obj)
-    # Keep the piece's "current clean tempo" in sync with its best recent log.
-    piece = session.get(Piece, data.piece_id)
-    if piece and (piece.current_clean_tempo or 0) < data.bpm_clean:
-        piece.current_clean_tempo = data.bpm_clean
-        session.add(piece)
+    _resync_clean_tempo(session, data.piece_id)
+    session.commit()
+    session.refresh(obj)
+    return obj
+
+
+@router.patch("/{log_id}", response_model=TempoLog)
+def update_tempo(log_id: int, data: TempoUpdate, session: Session = Depends(get_session)):
+    obj = session.get(TempoLog, log_id)
+    if not obj:
+        raise HTTPException(404, "Entrée introuvable")
+    obj.sqlmodel_update(data.model_dump(exclude_unset=True))
+    session.add(obj)
+    _resync_clean_tempo(session, obj.piece_id)
     session.commit()
     session.refresh(obj)
     return obj
@@ -50,7 +75,9 @@ def delete_tempo(log_id: int, session: Session = Depends(get_session)):
     obj = session.get(TempoLog, log_id)
     if not obj:
         raise HTTPException(404, "Entrée introuvable")
+    piece_id = obj.piece_id
     session.delete(obj)
+    _resync_clean_tempo(session, piece_id)
     session.commit()
 
 
@@ -72,6 +99,7 @@ def progression(session: Session = Depends(get_session)):
         )
         g["points"].append(
             {
+                "id": log.id,
                 "date": log.date.isoformat(),
                 "bpm_clean": log.bpm_clean,
                 "passage_label": log.passage_label,

@@ -20,6 +20,7 @@ from app.models import (
     Piece,
     PieceStatus,
     PracticeSession,
+    ReadingLog,
     Scale,
     TempoLog,
 )
@@ -66,7 +67,8 @@ def _resolve_piece(session, ref: str) -> Piece | None:
     if exact:
         return exact[0]
     partial = [p for p in pieces if low in p.title.lower()]
-    return partial[0] if len(partial) >= 1 else None
+    # Only resolve an unambiguous single match; refuse to guess between several.
+    return partial[0] if len(partial) == 1 else None
 
 
 # --------------------------------------------------------------------------- #
@@ -134,7 +136,7 @@ def get_tempo_progression(piece: str = "") -> list[dict]:
         if piece.strip():
             p = _resolve_piece(s, piece)
             if not p:
-                return [{"error": f"Pièce introuvable : {piece!r}"}]
+                return [{"error": f"Pièce introuvable ou ambiguë : {piece!r} — précise l'id ou le titre exact."}]
             target_id = p.id
             q = q.where(TempoLog.piece_id == target_id)
         logs = s.exec(q).all()
@@ -183,7 +185,7 @@ def get_progress_summary() -> dict:
         sessions = s.exec(select(PracticeSession)).all()
         scales = s.exec(select(Scale)).all()
         milestones = s.exec(select(Milestone)).all()
-        reading = []  # reading logs optional; kept light here
+        reading = s.exec(select(ReadingLog)).all()
 
         proj = projections.project_all_targets(
             [summaries.piece_proj(p) for p in pieces],
@@ -194,7 +196,7 @@ def get_progress_summary() -> dict:
             [summaries.piece_gauge(p) for p in pieces],
             [summaries.scale_gauge(x) for x in scales],
             [summaries.milestone_gauge(m) for m in milestones],
-            reading,
+            [summaries.reading_gauge(r) for r in reading],  # was [] — B6 fix
         )
         return {
             "text_summary": summaries.build_data_summary(s, today),
@@ -259,7 +261,7 @@ def update_piece_progress(
     with session_scope() as s:
         p = _resolve_piece(s, piece)
         if not p:
-            return {"error": f"Pièce introuvable : {piece!r}"}
+            return {"error": f"Pièce introuvable ou ambiguë : {piece!r} — précise l'id ou le titre exact."}
         if progress_pct is not None:
             p.progress_pct = max(0, min(100, progress_pct))
         if current_clean_tempo is not None:
@@ -289,7 +291,7 @@ def log_tempo(piece: str, bpm_clean: int, passage_label: str = "", date: str | N
     with session_scope() as s:
         p = _resolve_piece(s, piece)
         if not p:
-            return {"error": f"Pièce introuvable : {piece!r}"}
+            return {"error": f"Pièce introuvable ou ambiguë : {piece!r} — précise l'id ou le titre exact."}
         log = TempoLog(piece_id=p.id, bpm_clean=bpm_clean, passage_label=passage_label, date=when)
         s.add(log)
         if (p.current_clean_tempo or 0) < bpm_clean:

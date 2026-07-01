@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import datetime as dt
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, SQLModel, select
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlmodel import Field, Session, SQLModel, select
 
 from ..db import get_session
 from ..models import ClefFocus, ReadingLog
@@ -15,7 +15,7 @@ class ReadingCreate(SQLModel):
     date: dt.date | None = None
     clef_focus: ClefFocus = ClefFocus.both
     material: str = ""
-    minutes: int = 0
+    minutes: int = Field(default=0, ge=0)
     notes: str = ""
 
 
@@ -23,12 +23,12 @@ class ReadingUpdate(SQLModel):
     date: dt.date | None = None
     clef_focus: ClefFocus | None = None
     material: str | None = None
-    minutes: int | None = None
+    minutes: int | None = Field(default=None, ge=0)
     notes: str | None = None
 
 
 @router.get("", response_model=list[ReadingLog])
-def list_reading(limit: int = 200, session: Session = Depends(get_session)):
+def list_reading(limit: int = Query(200, ge=1, le=1000), session: Session = Depends(get_session)):
     return session.exec(
         select(ReadingLog).order_by(ReadingLog.date.desc(), ReadingLog.id.desc()).limit(limit)
     ).all()

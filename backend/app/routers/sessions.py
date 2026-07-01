@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import datetime as dt
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, SQLModel, select
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlmodel import Field, Session, SQLModel, select
 
 from ..db import get_session
 from ..models import PracticeSession
@@ -13,26 +13,26 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 class SessionCreate(SQLModel):
     date: dt.date | None = None
-    duration_min: int = 0
+    duration_min: int = Field(default=0, ge=0)
     focus_areas: list[str] = []
     pieces_worked: list[str] = []
-    tension_level: int | None = None
+    tension_level: int | None = Field(default=None, ge=1, le=5)
     mood: str = ""
     notes: str = ""
 
 
 class SessionUpdate(SQLModel):
     date: dt.date | None = None
-    duration_min: int | None = None
+    duration_min: int | None = Field(default=None, ge=0)
     focus_areas: list[str] | None = None
     pieces_worked: list[str] | None = None
-    tension_level: int | None = None
+    tension_level: int | None = Field(default=None, ge=1, le=5)
     mood: str | None = None
     notes: str | None = None
 
 
 @router.get("", response_model=list[PracticeSession])
-def list_sessions(limit: int = 200, session: Session = Depends(get_session)):
+def list_sessions(limit: int = Query(200, ge=1, le=1000), session: Session = Depends(get_session)):
     return session.exec(
         select(PracticeSession).order_by(PracticeSession.date.desc(), PracticeSession.id.desc()).limit(limit)
     ).all()

@@ -94,6 +94,7 @@ class Piece(SQLModel, table=True):
     target_tempo: int | None = Field(default=None, description="BPM goal")
     current_clean_tempo: int | None = Field(default=None, description="cleanest BPM today")
     order_index: int = Field(default=0, index=True, description="manual ordering within a track")
+    loved: bool = Field(default=False, description="pièce que j'aime jouer (pour les recommandations)")
     notes: str = ""
 
 

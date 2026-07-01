@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from sqlalchemy import event
+from sqlalchemy import event, inspect, text
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -17,6 +17,15 @@ from . import models  # noqa: F401
 from .config import settings
 
 _engine: Engine | None = None
+
+# Minimal, dependency-free "migration" for ADDITIVE columns on existing tables.
+# SQLModel.create_all() creates missing tables but never ALTERs existing ones,
+# and we intentionally avoid Alembic for this local-first app. New *tables* are
+# handled by create_all; new *columns* on existing tables are added here.
+# Each entry: (table, column, column DDL incl. type + default).
+_ADDITIVE_COLUMNS: list[tuple[str, str, str]] = [
+    ("pieces", "loved", "BOOLEAN NOT NULL DEFAULT 0"),
+]
 
 
 def get_engine() -> Engine:
@@ -40,9 +49,24 @@ def get_engine() -> Engine:
     return _engine
 
 
+def _ensure_columns(engine: Engine) -> None:
+    """Add any missing additive columns to existing tables (see _ADDITIVE_COLUMNS)."""
+    insp = inspect(engine)
+    tables = set(insp.get_table_names())
+    for table, column, ddl in _ADDITIVE_COLUMNS:
+        if table not in tables:
+            continue  # brand-new table → create_all already made it with the column
+        existing = {c["name"] for c in insp.get_columns(table)}
+        if column not in existing:
+            with engine.begin() as conn:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
+
+
 def init_db() -> None:
-    """Create all tables if they don't exist."""
-    SQLModel.metadata.create_all(get_engine())
+    """Create missing tables, then patch in any additive columns."""
+    engine = get_engine()
+    SQLModel.metadata.create_all(engine)
+    _ensure_columns(engine)
 
 
 def get_session() -> Iterator[Session]:

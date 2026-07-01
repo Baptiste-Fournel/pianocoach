@@ -3,10 +3,10 @@ from __future__ import annotations
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Field, Session, SQLModel, select
 
 from ..db import get_session
-from ..models import Piece, PieceStatus, Track
+from ..models import Piece, PieceStatus, TempoLog, Track, Video
 
 router = APIRouter(prefix="/pieces", tags=["pieces"])
 
@@ -16,12 +16,13 @@ class PieceCreate(SQLModel):
     composer: str
     status: PieceStatus = PieceStatus.planned
     track: Track = Track.common
-    difficulty: int | None = None
+    difficulty: int | None = Field(default=None, ge=1, le=10)
     date_started: date | None = None
     date_completed: date | None = None
-    progress_pct: int = 0
-    target_tempo: int | None = None
-    current_clean_tempo: int | None = None
+    progress_pct: int = Field(default=0, ge=0, le=100)
+    target_tempo: int | None = Field(default=None, ge=1)
+    current_clean_tempo: int | None = Field(default=None, ge=0)
+    loved: bool = False
     notes: str = ""
 
 
@@ -30,13 +31,14 @@ class PieceUpdate(SQLModel):
     composer: str | None = None
     status: PieceStatus | None = None
     track: Track | None = None
-    difficulty: int | None = None
+    difficulty: int | None = Field(default=None, ge=1, le=10)
     date_started: date | None = None
     date_completed: date | None = None
-    progress_pct: int | None = None
-    target_tempo: int | None = None
-    current_clean_tempo: int | None = None
+    progress_pct: int | None = Field(default=None, ge=0, le=100)
+    target_tempo: int | None = Field(default=None, ge=1)
+    current_clean_tempo: int | None = Field(default=None, ge=0)
     order_index: int | None = None
+    loved: bool | None = None
     notes: str | None = None
 
 
@@ -88,6 +90,14 @@ def delete_piece(piece_id: int, session: Session = Depends(get_session)):
     piece = session.get(Piece, piece_id)
     if not piece:
         raise HTTPException(404, "Pièce introuvable")
+    # App-layer cascade (the existing schema has no ON DELETE rule): remove the
+    # piece's tempo logs and unlink its videos so the delete never fails on FK.
+    for log in session.exec(select(TempoLog).where(TempoLog.piece_id == piece_id)).all():
+        session.delete(log)
+    for v in session.exec(select(Video).where(Video.piece_id == piece_id)).all():
+        v.piece_id = None
+        session.add(v)
+    session.flush()  # apply child deletes/unlinks before removing the parent (FK order)
     session.delete(piece)
     session.commit()
 
