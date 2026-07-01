@@ -71,7 +71,7 @@ function Disclaimer() {
   );
 }
 
-function UploadCard({ pieces }: { pieces: Piece[] | undefined }) {
+function UploadCard({ pieces, ffmpegAvailable }: { pieces: Piece[] | undefined; ffmpegAvailable: boolean }) {
   const { upload } = useVideoMutations();
   const [pieceId, setPieceId] = useState<string>("");
   const [notes, setNotes] = useState("");
@@ -110,6 +110,16 @@ function UploadCard({ pieces }: { pieces: Piece[] | undefined }) {
           <span>
             Démo en lecture seule : l'analyse vidéo nécessite le backend local
             (librosa + Gemini). L'import est désactivé ici.
+          </span>
+        </div>
+      )}
+      {!DEMO && !ffmpegAvailable && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <span>
+            <strong>ffmpeg introuvable</strong> — requis pour extraire l'audio. Installe-le puis relance
+            l'app : <code className="rounded bg-surface px-1 py-0.5">brew install ffmpeg</code>. (Lancé via
+            PianoCoach.app, ffmpeg doit être dans <code className="rounded bg-surface px-1 py-0.5">/opt/homebrew/bin</code>.)
           </span>
         </div>
       )}
@@ -152,7 +162,7 @@ function UploadCard({ pieces }: { pieces: Piece[] | undefined }) {
         </Field>
         <Button
           onClick={submit}
-          disabled={DEMO || upload.isPending || !fileName}
+          disabled={DEMO || upload.isPending || !fileName || !ffmpegAvailable}
         >
           <Upload size={16} />
           {upload.isPending ? "Envoi…" : "Analyser"}
@@ -516,7 +526,7 @@ export default function Videos() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_1.6fr]">
         <div className="space-y-6">
-          <UploadCard pieces={piecesQ.data} />
+          <UploadCard pieces={piecesQ.data} ffmpegAvailable={settingsQ.data?.ffmpeg_available !== false} />
 
           <Card>
             <SectionTitle title="Mes vidéos" subtitle={`${videos.length} enregistrée(s)`} />

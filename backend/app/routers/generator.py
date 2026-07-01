@@ -14,7 +14,7 @@ router = APIRouter(prefix="/generator", tags=["generator"])
 
 @router.get("/session")
 def generate(
-    total_min: int = Query(90, ge=10, le=480),
+    total_min: int = Query(90, ge=10, le=1440),  # up to 24 h — no artificial 4 h cap
     weekday: int | None = Query(None, ge=0, le=6, description="0=lundi..6=dimanche; défaut = aujourd'hui"),
     session: Session = Depends(get_session),
 ):

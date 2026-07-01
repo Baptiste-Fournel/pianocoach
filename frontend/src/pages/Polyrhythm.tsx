@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Square, Hand } from "lucide-react";
 import { PageHeader, Card, SectionTitle, Button } from "../components/ui";
+import { cycleHits, drainDue, type Hit } from "../lib/polyrhythm";
 
 // --- §5.10 Polyrhythm trainer ----------------------------------------------
 // Self-contained, no backend. Web Audio API with a lookahead scheduler.
@@ -51,8 +52,8 @@ export default function Polyrhythm() {
   const bpmRef = useRef(bpm);
   const patternRef = useRef(pattern);
   const nextCycleStartRef = useRef(0); // absolute ctx time of next cycle's downbeat
-  // queue of scheduled hits for the visual indicator: {hand, idx, time}
-  const visualQueueRef = useRef<{ hand: "L" | "R"; idx: number; time: number }[]>([]);
+  // queue of scheduled hits for the visual indicator (see lib/polyrhythm)
+  const visualQueueRef = useRef<Hit[]>([]);
 
   bpmRef.current = bpm;
   patternRef.current = pattern;
@@ -78,20 +79,17 @@ export default function Polyrhythm() {
 
     while (nextCycleStartRef.current < ctx.currentTime + SCHEDULE_AHEAD) {
       const start = nextCycleStartRef.current;
-      // Left-hand hits
-      for (let i = 0; i < a; i++) {
-        const t = start + (i * T) / a;
-        const accent = i === 0; // downbeat coincides
-        clickAt(ctx, t, accent ? FREQ_ACCENT : FREQ_LEFT, accent ? 0.5 : 0.35);
-        visualQueueRef.current.push({ hand: "L", idx: i, time: t });
+      const hits = cycleHits(a, b, T, start);
+      for (const h of hits) {
+        const isDownbeat = h.idx === 0;
+        if (h.hand === "L") {
+          clickAt(ctx, h.time, isDownbeat ? FREQ_ACCENT : FREQ_LEFT, isDownbeat ? 0.5 : 0.35);
+        } else if (!isDownbeat) {
+          // RH downbeat is covered by the accent above; other RH hits play here.
+          clickAt(ctx, h.time, FREQ_RIGHT, 0.3);
+        }
       }
-      // Right-hand hits (skip j=0, already played as accent above for the downbeat,
-      // but still register the visual so the right dot lights up)
-      for (let j = 0; j < b; j++) {
-        const t = start + (j * T) / b;
-        if (j !== 0) clickAt(ctx, t, FREQ_RIGHT, 0.3);
-        visualQueueRef.current.push({ hand: "R", idx: j, time: t });
-      }
+      visualQueueRef.current.push(...hits);
       nextCycleStartRef.current += T;
     }
   }
@@ -99,18 +97,12 @@ export default function Polyrhythm() {
   function visualLoop() {
     const ctx = ctxRef.current;
     if (!ctx) return;
-    const now = ctx.currentTime;
-    const q = visualQueueRef.current;
-    // Fire any hits whose time has arrived; keep the most recent per hand.
-    let li = -2;
-    let ri = -2;
-    while (q.length && q[0].time <= now) {
-      const hit = q.shift()!;
-      if (hit.hand === "L") li = hit.idx;
-      else ri = hit.idx;
-    }
-    if (li !== -2) setActiveLeft(li);
-    if (ri !== -2) setActiveRight(ri);
+    // drainDue scans the whole (per-hand-ordered) queue, so the RH downbeat and
+    // the first 3:4 RH lights are no longer blocked behind later LH hits.
+    const { left, right, remaining } = drainDue(visualQueueRef.current, ctx.currentTime);
+    visualQueueRef.current = remaining;
+    if (left !== -1) setActiveLeft(left);
+    if (right !== -1) setActiveRight(right);
     rafRef.current = requestAnimationFrame(visualLoop);
   }
 

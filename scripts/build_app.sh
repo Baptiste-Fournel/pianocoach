@@ -65,6 +65,8 @@ PLIST
 # Quoted heredoc → $0 / dirname resolved at RUNTIME, so it works from /Applications.
 cat > "$APP/Contents/MacOS/PianoCoach" <<'LAUNCH'
 #!/bin/bash
+# LaunchServices gives us a minimal PATH — add Homebrew/local so ffmpeg is found.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 # Tell the launcher where the bundle icon is (for the running Dock icon).
 export PIANOCOACH_ICON="$(cd "$(dirname "$0")/../Resources" && pwd)/PianoCoach.icns"
 cd /Users/baptiste/pianocoach || exit 1

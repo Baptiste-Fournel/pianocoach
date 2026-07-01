@@ -10,10 +10,16 @@ so the scoring logic is fully unit-testable without audio or librosa.
 from __future__ import annotations
 
 import math
+import os
 import shutil
 import statistics
 import subprocess
 from pathlib import Path
+
+# Where ffmpeg/ffprobe commonly live. Needed because the .app bundle is launched
+# by LaunchServices with a minimal PATH (no /opt/homebrew/bin), so shutil.which
+# alone would wrongly report ffmpeg as missing.
+_COMMON_BIN_DIRS = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/opt/local/bin"]
 
 
 # --------------------------------------------------------------------------- #
@@ -95,23 +101,86 @@ def _downsample(seq: list[float], max_points: int = 200) -> list[float]:
 # --------------------------------------------------------------------------- #
 # ffmpeg + librosa orchestration (the heavy part)
 # --------------------------------------------------------------------------- #
+def _find_binary(name: str, env_var: str) -> str | None:
+    """Locate a binary: explicit env override, then PATH, then common dirs."""
+    override = os.environ.get(env_var)
+    if override and Path(override).exists():
+        return override
+    found = shutil.which(name)
+    if found:
+        return found
+    for d in _COMMON_BIN_DIRS:
+        cand = Path(d) / name
+        if cand.exists():
+            return str(cand)
+    return None
+
+
+def ffmpeg_bin() -> str | None:
+    return _find_binary("ffmpeg", "FFMPEG_PATH")
+
+
+def ffprobe_bin() -> str | None:
+    return _find_binary("ffprobe", "FFPROBE_PATH")
+
+
 def ffmpeg_available() -> bool:
-    return shutil.which("ffmpeg") is not None
+    return ffmpeg_bin() is not None
 
 
 def extract_audio(video_path: Path, out_wav: Path, sr: int = 22050) -> Path:
     """Extract mono wav audio from a video with ffmpeg."""
-    if not ffmpeg_available():
-        raise RuntimeError("ffmpeg introuvable — installe-le (brew install ffmpeg).")
+    ff = ffmpeg_bin()
+    if not ff:
+        raise RuntimeError(
+            "ffmpeg introuvable. Installe-le (brew install ffmpeg) puis relance. "
+            "Astuce : si l'app est lancée depuis PianoCoach.app, ffmpeg doit être "
+            "dans /opt/homebrew/bin ou /usr/local/bin (ou défini via FFMPEG_PATH)."
+        )
     out_wav.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [
-        "ffmpeg", "-y", "-i", str(video_path),
-        "-ac", "1", "-ar", str(sr), "-vn", str(out_wav),
-    ]
+    cmd = [ff, "-y", "-i", str(video_path), "-ac", "1", "-ar", str(sr), "-vn", str(out_wav)]
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:
         raise RuntimeError(f"Échec extraction audio ffmpeg: {proc.stderr[-500:]}")
     return out_wav
+
+
+def probe_duration(video_path: Path) -> float | None:
+    """Video duration in seconds via ffprobe, or None if unavailable."""
+    fp = ffprobe_bin()
+    if not fp:
+        return None
+    proc = subprocess.run(
+        [fp, "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=noprint_wrappers=1:nokey=1", str(video_path)],
+        capture_output=True, text=True,
+    )
+    try:
+        return float(proc.stdout.strip())
+    except (ValueError, AttributeError):
+        return None
+
+
+def transcode_for_upload(src: Path, dst: Path, max_seconds: int = 600, height: int = 720) -> Path:
+    """Produce a small, duration-bounded H.264 copy for the Gemini upload.
+
+    Downscales to `height` and caps the clip at `max_seconds` so a huge/long
+    recording doesn't blow the free-tier limits. Best-effort: returns the
+    original path if ffmpeg is missing or the transcode fails.
+    """
+    ff = ffmpeg_bin()
+    if not ff:
+        return src
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        ff, "-y", "-t", str(max_seconds), "-i", str(src),
+        "-vf", f"scale=-2:{height}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
+        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(dst),
+    ]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0 or not dst.exists():
+        return src
+    return dst
 
 
 def analyze_audio(wav_path: Path) -> dict:

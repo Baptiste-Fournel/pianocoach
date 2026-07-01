@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from ..config import settings, write_env_values
+from ..services.audio_analysis import ffmpeg_available
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -13,6 +14,7 @@ class SettingsOut(BaseModel):
     gemini_model: str
     video_local_only: bool
     data_dir: str
+    ffmpeg_available: bool
 
 
 class SettingsUpdate(BaseModel):
@@ -27,6 +29,7 @@ def _current() -> SettingsOut:
         gemini_model=settings.gemini_model,
         video_local_only=settings.video_local_only,
         data_dir=str(settings.data_path),
+        ffmpeg_available=ffmpeg_available(),
     )
 
 

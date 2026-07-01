@@ -211,4 +211,5 @@ export interface AppSettings {
   gemini_model: string;
   video_local_only: boolean;
   data_dir: string;
+  ffmpeg_available: boolean;
 }

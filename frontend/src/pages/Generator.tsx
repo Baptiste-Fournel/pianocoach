@@ -21,7 +21,7 @@ import type { FocusArea, GeneratedSession } from "../types";
 const WEEKDAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 const WEEKDAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-const DURATION_PRESETS = [45, 60, 90, 120];
+const DURATION_PRESETS = [45, 90, 120, 240, 480];
 
 // Monday=0 .. Sunday=6
 function todayWeekday(): number {
@@ -74,7 +74,7 @@ export default function Generator() {
             <input
               type="range"
               min={30}
-              max={240}
+              max={720}
               step={5}
               value={totalMin}
               onChange={(e) => setTotalMin(Number(e.target.value))}
@@ -83,7 +83,7 @@ export default function Generator() {
             />
             <div className="flex justify-between text-xs text-faint mt-1">
               <span>30 min</span>
-              <span>4 h</span>
+              <span>12 h</span>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
               {DURATION_PRESETS.map((p) => (

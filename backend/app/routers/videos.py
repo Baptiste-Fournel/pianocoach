@@ -44,7 +44,16 @@ def run_analysis(video_id: int) -> None:
                 with session_scope() as s:
                     p = s.get(Piece, piece_id)
                     piece_title = p.title if p else None
-            ai_feedback = gemini.analyze_video(Path(file_path), metrics, piece_title)
+            # Downscale + bound duration before upload so a large/long clip
+            # doesn't blow Gemini's free-tier limits. Best-effort; falls back
+            # to the original if ffmpeg can't transcode.
+            clip = settings.analysis_path / f"{video_id}_gemini.mp4"
+            upload_path = audio_analysis.transcode_for_upload(Path(file_path), clip)
+            try:
+                ai_feedback = gemini.analyze_video(upload_path, metrics, piece_title)
+            finally:
+                if upload_path != Path(file_path) and upload_path.exists():
+                    upload_path.unlink(missing_ok=True)
 
         with session_scope() as s:
             v = s.get(Video, video_id)

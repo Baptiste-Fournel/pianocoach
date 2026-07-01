@@ -94,7 +94,11 @@ def generate_session(
     blocks = [
         {
             "focus": "scales",
-            "label": f"Gammes & arpèges — {scale.key} majeur" if scale else "Gammes & arpèges",
+            "label": (
+                f"Gammes & arpèges — {_note_fr(scale.key)} {_type_fr(scale.type)}"
+                if scale
+                else "Gammes & arpèges"
+            ),
             "minutes": minutes["scales"],
             "detail": (
                 f"Mains séparées puis ensemble. Cible {scale.target_bpm} BPM, "
@@ -148,7 +152,7 @@ def generate_session(
         "weekday": weekday,
         "weekday_name": WEEKDAY_NAMES[weekday % 7],
         "total_min": sum(b["minutes"] for b in blocks),
-        "scale_of_day": scale.key if scale else None,
+        "scale_of_day": _note_fr(scale.key) if scale else None,
         "piece_of_day": piece.title if piece else None,
         "polyrhythm": poly,
         "blocks": blocks,
@@ -157,3 +161,23 @@ def generate_session(
 
 def _clef_fr(clef: str) -> str:
     return {"bass": "clé de fa", "treble": "clé de sol", "both": "deux clés"}.get(clef, clef)
+
+
+# Solfège: canonical English keys ("C", "F#", "Bb") → French for display.
+_NOTE_FR = {"C": "Do", "D": "Ré", "E": "Mi", "F": "Fa", "G": "Sol", "A": "La", "B": "Si"}
+_TYPE_FR = {
+    "major": "majeur",
+    "minor_harmonic": "mineure harmonique",
+    "minor_melodic": "mineure mélodique",
+}
+
+
+def _note_fr(key: str) -> str:
+    if not key:
+        return key
+    acc = {"#": "♯", "♯": "♯", "b": "♭", "♭": "♭"}.get(key[1:2], "")
+    return _NOTE_FR.get(key[0].upper(), key[0].upper()) + acc
+
+
+def _type_fr(scale_type: str) -> str:
+    return _TYPE_FR.get(scale_type, scale_type)

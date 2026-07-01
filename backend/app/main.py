@@ -72,8 +72,14 @@ for r in (
 
 @api.get("/health")
 def health():
-    return {"status": "ok", "gemini_configured": settings.gemini_enabled,
-            "video_local_only": settings.video_local_only}
+    from .services.audio_analysis import ffmpeg_available
+
+    return {
+        "status": "ok",
+        "gemini_configured": settings.gemini_enabled,
+        "video_local_only": settings.video_local_only,
+        "ffmpeg_available": ffmpeg_available(),
+    }
 
 
 app.mount("/api", api)

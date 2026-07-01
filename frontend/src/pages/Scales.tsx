@@ -24,7 +24,7 @@ import {
   Field,
 } from "../components/ui";
 import { useScales, useScaleBpmHistory, useScaleMutations } from "../lib/queries";
-import { CHART_COLORS, frenchDate, shortDate } from "../lib/format";
+import { CHART_COLORS, frenchDate, noteFr, noteToCanonical, shortDate } from "../lib/format";
 import { DEMO } from "../lib/api";
 import type { Scale, ScaleType, Hands } from "../types";
 
@@ -95,7 +95,7 @@ export default function Scales() {
       return {
         id: g.scale_id,
         dataKey: `s${g.scale_id}`,
-        name: `${g.key} ${typeShort}`,
+        name: `${noteFr(g.key)} ${typeShort}`,
         color: CHART_COLORS[i % CHART_COLORS.length],
       };
     });
@@ -136,7 +136,7 @@ export default function Scales() {
     e.preventDefault();
     if (!form.key.trim()) return;
     create.mutate({
-      key: form.key.trim(),
+      key: noteToCanonical(form.key),
       type: form.type,
       hands: form.hands,
       target_bpm: form.target_bpm,
@@ -209,7 +209,7 @@ export default function Scales() {
                   const reached = pct >= 100;
                   return (
                     <tr key={s.id} className="border-b border-border/60 last:border-0 hover:bg-surface-2/40">
-                      <td className="py-2.5 pr-3 font-semibold text-text">{s.key}</td>
+                      <td className="py-2.5 pr-3 font-semibold text-text">{noteFr(s.key)}</td>
                       <td className="py-2.5 pr-3 text-muted">{SCALE_TYPE_LABELS[s.type]}</td>
                       <td className="py-2.5 pr-3">
                         <Badge color={s.hands === "together" ? "var(--color-accent)" : "var(--color-faint)"}>
@@ -249,7 +249,7 @@ export default function Scales() {
                         <Toggle
                           checked={s.mastered}
                           onChange={(v) => !DEMO && update.mutate({ id: s.id, b: { mastered: v } })}
-                          label={`Marquer ${s.key} ${SCALE_TYPE_LABELS[s.type]} comme maîtrisée`}
+                          label={`Marquer ${noteFr(s.key)} ${SCALE_TYPE_LABELS[s.type]} comme maîtrisée`}
                         />
                       </td>
                       <td className="py-2.5 pr-3 text-faint whitespace-nowrap">{frenchDate(s.last_practiced)}</td>
@@ -258,9 +258,9 @@ export default function Scales() {
                           variant="ghost"
                           className="!px-2 !py-1 text-bad"
                           disabled={DEMO}
-                          aria-label={`Supprimer la gamme ${s.key}`}
+                          aria-label={`Supprimer la gamme ${noteFr(s.key)}`}
                           onClick={() => {
-                            if (window.confirm(`Supprimer la gamme ${s.key} ${SCALE_TYPE_LABELS[s.type]} ?`)) {
+                            if (window.confirm(`Supprimer la gamme ${noteFr(s.key)} ${SCALE_TYPE_LABELS[s.type]} ?`)) {
                               remove.mutate(s.id);
                             }
                           }}

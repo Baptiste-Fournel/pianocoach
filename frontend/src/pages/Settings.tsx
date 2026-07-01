@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, KeyRound, Lock, ShieldCheck, FolderOpen } from "lucide-react";
+import { AlertTriangle, Check, KeyRound, Lock, ShieldCheck, FolderOpen } from "lucide-react";
 import { PageHeader, Card, SectionTitle, Spinner, Empty, Button, Badge, Field, Toggle } from "../components/ui";
 import { useSettings, useUpdateSettings } from "../lib/queries";
 import { DEMO } from "../lib/api";
@@ -152,6 +152,29 @@ export default function Settings() {
             {data.data_dir || "—"}
           </code>
         </div>
+      </Card>
+
+      {/* ---- ffmpeg (analyse vidéo) ---- */}
+      <Card>
+        <SectionTitle
+          title="Analyse vidéo (ffmpeg)"
+          subtitle="Requis pour extraire l'audio des vidéos (métriques librosa)."
+        />
+        {data.ffmpeg_available ? (
+          <div className="flex items-center gap-2 text-sm text-good">
+            <Check size={16} /> ffmpeg détecté — l'analyse vidéo est disponible.
+          </div>
+        ) : (
+          <div className="flex items-start gap-2 text-sm text-warn">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            <span>
+              ffmpeg introuvable. Installe-le puis relance l'app :{" "}
+              <code className="rounded bg-surface-2 px-1 py-0.5">brew install ffmpeg</code>. Sans lui,
+              l'import vidéo et les métriques audio ne fonctionnent pas. (Lancé via PianoCoach.app, ffmpeg
+              doit être dans <code className="rounded bg-surface-2 px-1 py-0.5">/opt/homebrew/bin</code>.)
+            </span>
+          </div>
+        )}
       </Card>
 
       {/* ---- Confidentialité (explainer) ---- */}
