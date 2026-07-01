@@ -19,6 +19,7 @@ import {
   Badge,
   Field,
 } from "../components/ui";
+import { Trash2 } from "lucide-react";
 import { DEMO } from "../lib/api";
 import { usePieces, useTempoProgression, useTempoMutations } from "../lib/queries";
 import { CHART_COLORS, shortDate, frenchDate, todayISO } from "../lib/format";
@@ -174,6 +175,7 @@ export default function Tempo() {
 
 function ProgressionCard({ prog }: { prog: TempoProgression }) {
   const color = CHART_COLORS[prog.piece_id % CHART_COLORS.length];
+  const { remove } = useTempoMutations();
 
   // Plot all points chronologically as a single line by date.
   const chartData = useMemo(
@@ -265,15 +267,30 @@ function ProgressionCard({ prog }: { prog: TempoProgression }) {
                 <th className="font-medium py-1 pr-4">Date</th>
                 <th className="font-medium py-1 pr-4">Passage</th>
                 <th className="font-medium py-1 text-right">Tempo propre</th>
+                <th className="font-medium py-1 w-8" />
               </tr>
             </thead>
             <tbody>
-              {chartData.map((pt, i) => (
-                <tr key={i} className="border-t border-border/60">
+              {chartData.map((pt) => (
+                <tr key={pt.id} className="border-t border-border/60">
                   <td className="py-1.5 pr-4 text-muted">{frenchDate(pt.date)}</td>
                   <td className="py-1.5 pr-4 text-text">{pt.passage_label}</td>
                   <td className="py-1.5 text-right text-text tabular-nums">
                     {pt.bpm_clean} BPM
+                  </td>
+                  <td className="py-1.5 pl-2 text-right">
+                    <button
+                      type="button"
+                      className="text-faint hover:text-bad disabled:opacity-40"
+                      aria-label="Supprimer ce relevé"
+                      disabled={DEMO || remove.isPending}
+                      onClick={() => {
+                        if (DEMO) return;
+                        if (confirm("Supprimer ce relevé de tempo ?")) remove.mutate(pt.id);
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </td>
                 </tr>
               ))}

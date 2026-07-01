@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2, X } from "lucide-react";
 import { clsx } from "clsx";
 import {
   PageHeader,
@@ -27,8 +27,9 @@ function tensionColor(level: number): string {
 export default function Journal() {
   const { data: sessions, isLoading } = useSessions();
   const { data: pieces } = usePieces();
-  const { create, remove } = useSessionMutations();
+  const { create, update, remove } = useSessionMutations();
 
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [date, setDate] = useState(todayISO());
   const [duration, setDuration] = useState("30");
   const [focusAreas, setFocusAreas] = useState<FocusArea[]>([]);
@@ -63,6 +64,7 @@ export default function Journal() {
   }
 
   function reset() {
+    setEditingId(null);
     setDate(todayISO());
     setDuration("30");
     setFocusAreas([]);
@@ -70,6 +72,18 @@ export default function Journal() {
     setTension(3);
     setMood("");
     setNotes("");
+  }
+
+  function startEdit(s: PracticeSession) {
+    setEditingId(s.id);
+    setDate(s.date);
+    setDuration(String(s.duration_min));
+    setFocusAreas(s.focus_areas);
+    setPiecesWorked(s.pieces_worked);
+    setTension(s.tension_level ?? 3);
+    setMood(s.mood);
+    setNotes(s.notes);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -85,8 +99,12 @@ export default function Journal() {
       mood: mood.trim(),
       notes: notes.trim(),
     };
-    create.mutate(payload);
-    reset();
+    if (editingId != null) {
+      update.mutate({ id: editingId, b: payload }, { onSuccess: reset });
+    } else {
+      create.mutate(payload);
+      reset();
+    }
   }
 
   const pieceTitles = useMemo(
@@ -116,7 +134,9 @@ export default function Journal() {
       </div>
 
       <Card>
-        <h2 className="text-lg font-semibold text-text mb-1">Nouvelle session</h2>
+        <h2 className="text-lg font-semibold text-text mb-1">
+          {editingId != null ? "Modifier la session" : "Nouvelle session"}
+        </h2>
         <p className="text-sm text-muted mb-4">
           Quelques secondes pour garder le fil de ta progression.
         </p>
@@ -254,9 +274,20 @@ export default function Journal() {
             />
           </Field>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? "Enregistrement…" : "Enregistrer la session"}
+          <div className="flex justify-end gap-2">
+            {editingId != null && (
+              <Button type="button" variant="ghost" onClick={reset}>
+                <X size={14} /> Annuler
+              </Button>
+            )}
+            <Button type="submit" disabled={create.isPending || update.isPending}>
+              {editingId != null
+                ? update.isPending
+                  ? "Mise à jour…"
+                  : "Mettre à jour"
+                : create.isPending
+                  ? "Enregistrement…"
+                  : "Enregistrer la session"}
             </Button>
           </div>
         </form>
@@ -313,15 +344,19 @@ export default function Journal() {
                     {s.notes && <p className="text-sm text-muted mt-2 whitespace-pre-wrap">{s.notes}</p>}
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    className="shrink-0"
-                    aria-label="Supprimer la session"
-                    disabled={remove.isPending}
-                    onClick={() => remove.mutate(s.id)}
-                  >
-                    <Trash2 size={16} />
-                  </Button>
+                  <div className="flex shrink-0 gap-1">
+                    <Button variant="ghost" aria-label="Modifier la session" onClick={() => startEdit(s)}>
+                      <Pencil size={16} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      aria-label="Supprimer la session"
+                      disabled={remove.isPending}
+                      onClick={() => remove.mutate(s.id)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}

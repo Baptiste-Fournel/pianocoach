@@ -74,7 +74,7 @@ export interface TempoProgression {
   piece_id: number;
   piece_title: string;
   target_tempo: number | null;
-  points: { date: string; bpm_clean: number; passage_label: string }[];
+  points: { id: number; date: string; bpm_clean: number; passage_label: string }[];
 }
 
 export interface ReadingLog {

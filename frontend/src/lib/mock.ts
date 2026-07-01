@@ -148,7 +148,7 @@ function buildProgression() {
       target_tempo: piece?.target_tempo ?? null,
       points: [],
     });
-    g.points.push({ date: t.date, bpm_clean: t.bpm_clean, passage_label: t.passage_label ?? "" });
+    g.points.push({ id: t.id, date: t.date, bpm_clean: t.bpm_clean, passage_label: t.passage_label ?? "" });
   }
   return Object.values(groups);
 }

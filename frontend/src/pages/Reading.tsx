@@ -9,7 +9,7 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
-import { Trash2, BookOpen, Music } from "lucide-react";
+import { Trash2, BookOpen, Music, Pencil, X } from "lucide-react";
 import { PageHeader, Card, SectionTitle, Button, Badge, Stat, Field, Empty, Spinner } from "../components/ui";
 import { CLEF_LABELS, formatMinutes, frenchDate, todayISO } from "../lib/format";
 import { useReading, useReadingMutations } from "../lib/queries";
@@ -29,8 +29,9 @@ function clefColor(c: ClefFocus): string {
 
 export default function Reading() {
   const { data, isLoading } = useReading();
-  const { create, remove } = useReadingMutations();
+  const { create, update, remove } = useReadingMutations();
 
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [date, setDate] = useState(todayISO());
   const [clefFocus, setClefFocus] = useState<ClefFocus>("bass");
   const [material, setMaterial] = useState("");
@@ -59,27 +60,42 @@ export default function Reading() {
     }));
   }, [data]);
 
-  const canSubmit = material.trim().length > 0 && Number(minutes) > 0 && !create.isPending && !DEMO;
+  const busy = create.isPending || update.isPending;
+  const canSubmit = material.trim().length > 0 && Number(minutes) > 0 && !busy && !DEMO;
+
+  function resetForm() {
+    setEditingId(null);
+    setDate(todayISO());
+    setClefFocus("bass");
+    setMaterial("");
+    setMinutes("15");
+    setNotes("");
+  }
+
+  function startEdit(l: ReadingLog) {
+    setEditingId(l.id);
+    setDate(l.date);
+    setClefFocus(l.clef_focus);
+    setMaterial(l.material);
+    setMinutes(String(l.minutes));
+    setNotes(l.notes);
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
-    create.mutate(
-      {
-        date,
-        clef_focus: clefFocus,
-        material: material.trim(),
-        minutes: Math.round(Number(minutes)),
-        notes: notes.trim(),
-      } satisfies Partial<ReadingLog>,
-      {
-        onSuccess: () => {
-          setMaterial("");
-          setMinutes("15");
-          setNotes("");
-        },
-      }
-    );
+    const payload = {
+      date,
+      clef_focus: clefFocus,
+      material: material.trim(),
+      minutes: Math.round(Number(minutes)),
+      notes: notes.trim(),
+    } satisfies Partial<ReadingLog>;
+    if (editingId != null) {
+      update.mutate({ id: editingId, b: payload }, { onSuccess: resetForm });
+    } else {
+      create.mutate(payload, { onSuccess: resetForm });
+    }
   }
 
   return (
@@ -140,7 +156,10 @@ export default function Reading() {
 
           <div className="grid lg:grid-cols-5 gap-6">
             <Card className="lg:col-span-2">
-              <SectionTitle title="Ajouter une séance" subtitle="Note ce que tu as déchiffré aujourd'hui." />
+              <SectionTitle
+                title={editingId != null ? "Modifier la séance" : "Ajouter une séance"}
+                subtitle="Note ce que tu as déchiffré aujourd'hui."
+              />
               {DEMO && (
                 <p className="text-xs text-warn mb-3">Mode démo : l'enregistrement est désactivé (lecture seule).</p>
               )}
@@ -202,9 +221,22 @@ export default function Reading() {
                   />
                 </Field>
 
-                <Button type="submit" disabled={!canSubmit}>
-                  {create.isPending ? "Enregistrement…" : "Enregistrer la séance"}
-                </Button>
+                <div className="flex gap-2">
+                  {editingId != null && (
+                    <Button type="button" variant="ghost" onClick={resetForm}>
+                      <X size={14} /> Annuler
+                    </Button>
+                  )}
+                  <Button type="submit" disabled={!canSubmit}>
+                    {editingId != null
+                      ? update.isPending
+                        ? "Mise à jour…"
+                        : "Mettre à jour"
+                      : create.isPending
+                        ? "Enregistrement…"
+                        : "Enregistrer la séance"}
+                  </Button>
+                </div>
               </form>
             </Card>
 
@@ -231,18 +263,29 @@ export default function Reading() {
                         <div className="text-xs text-faint mt-0.5">{frenchDate(l.date)}</div>
                         {l.notes && <p className="text-sm text-muted mt-1 whitespace-pre-wrap break-words">{l.notes}</p>}
                       </div>
-                      <Button
-                        variant="ghost"
-                        className="!px-2 shrink-0"
-                        aria-label="Supprimer la séance"
-                        disabled={DEMO || remove.isPending}
-                        onClick={() => {
-                          if (DEMO) return;
-                          if (confirm("Supprimer cette séance de lecture ?")) remove.mutate(l.id);
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          variant="ghost"
+                          className="!px-2"
+                          aria-label="Modifier la séance"
+                          disabled={DEMO}
+                          onClick={() => startEdit(l)}
+                        >
+                          <Pencil size={16} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="!px-2"
+                          aria-label="Supprimer la séance"
+                          disabled={DEMO || remove.isPending}
+                          onClick={() => {
+                            if (DEMO) return;
+                            if (confirm("Supprimer cette séance de lecture ?")) remove.mutate(l.id);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>
