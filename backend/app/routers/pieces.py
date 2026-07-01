@@ -7,6 +7,7 @@ from sqlmodel import Field, Session, SQLModel, select
 
 from ..db import get_session
 from ..models import Piece, PieceStatus, TempoLog, Track, Video
+from ..seed import backfill_seed_skills
 
 router = APIRouter(prefix="/pieces", tags=["pieces"])
 
@@ -102,6 +103,12 @@ def delete_piece(piece_id: int, session: Session = Depends(get_session)):
     session.flush()  # apply child deletes/unlinks before removing the parent (FK order)
     session.delete(piece)
     session.commit()
+
+
+@router.post("/backfill-skills")
+def backfill_skills(session: Session = Depends(get_session)):
+    """One-off: apply default skill tags to untagged seed pieces (idempotent)."""
+    return backfill_seed_skills(session)
 
 
 @router.post("/reorder", response_model=list[Piece])

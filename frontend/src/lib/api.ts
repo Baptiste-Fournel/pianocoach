@@ -65,6 +65,7 @@ export const api = {
   updatePiece: (id: number, b: Partial<Piece>) => patch<Piece>(`/pieces/${id}`, b),
   deletePiece: (id: number) => del(`/pieces/${id}`),
   reorderPieces: (ids: number[]) => post<Piece[]>("/pieces/reorder", ids),
+  backfillSkills: () => post<{ updated: number; titles: string[] }>("/pieces/backfill-skills"),
 
   // Practice sessions
   listSessions: () => get<PracticeSession[]>("/sessions"),

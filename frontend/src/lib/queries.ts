@@ -28,6 +28,11 @@ export function usePieceMutations() {
   };
 }
 
+export function useBackfillSkills() {
+  const inv = useInvalidate();
+  return useMutation({ mutationFn: () => api.backfillSkills(), onSuccess: () => inv("pieces") });
+}
+
 // ---- Sessions ----
 export const useSessions = () => useQuery({ queryKey: ["sessions"], queryFn: api.listSessions });
 export function useSessionMutations() {

@@ -177,9 +177,37 @@ def seed(session: Session | None = None) -> dict[str, int]:
     return inserted
 
 
+def backfill_seed_skills(session: Session | None = None) -> dict:
+    """One-off, idempotent: tag recognised seed pieces that are still untagged
+    (e.g. seeded before skills existed). NEVER overwrites an existing tag and
+    NEVER touches user-added pieces (titles absent from the seed map)."""
+    own_session = session is None
+    if session is None:
+        session = Session(get_engine())
+    updated: list[str] = []
+    try:
+        for p in session.exec(select(Piece)).all():
+            default = _SKILLS.get(p.title)
+            if default and not p.skills:  # recognised seed piece, currently untagged
+                p.skills = list(default)
+                session.add(p)
+                updated.append(p.title)
+        session.commit()
+    finally:
+        if own_session:
+            session.close()
+    return {"updated": len(updated), "titles": updated}
+
+
 if __name__ == "__main__":
-    result = seed()
-    if result:
-        print("Seeded:", ", ".join(f"{v} {k}" for k, v in result.items()))
+    import sys
+
+    if "--backfill-skills" in sys.argv:
+        r = backfill_seed_skills()
+        print(f"Backfill : {r['updated']} pièce(s) taguée(s)." + (f" {r['titles']}" if r["updated"] else ""))
     else:
-        print("Database already seeded — nothing to do.")
+        result = seed()
+        if result:
+            print("Seeded:", ", ".join(f"{v} {k}" for k, v in result.items()))
+        else:
+            print("Database already seeded — nothing to do.")

@@ -1,11 +1,15 @@
-import { PageHeader, Card, Spinner, ProgressBar } from "../components/ui";
-import { usePieces, useSessions } from "../lib/queries";
+import { useState } from "react";
+import { PageHeader, Card, Spinner, ProgressBar, Button } from "../components/ui";
+import { usePieces, useSessions, useBackfillSkills } from "../lib/queries";
 import { skillActivityMinutes, skillProgress } from "../lib/skills";
 import { formatMinutes } from "../lib/format";
+import { DEMO } from "../lib/api";
 
 export default function Skills() {
   const { data: pieces, isLoading } = usePieces();
   const { data: sessions } = useSessions();
+  const backfill = useBackfillSkills();
+  const [backfillMsg, setBackfillMsg] = useState<string | null>(null);
 
   if (isLoading || !pieces) return <Spinner label="Chargement des compétences…" />;
 
@@ -68,6 +72,28 @@ export default function Skills() {
           Tag tes pièces depuis le <span className="text-text">Répertoire</span>. La capture de pièce, à venir,
           enrichira ce suivi.
         </p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <Button
+            variant="ghost"
+            disabled={DEMO || backfill.isPending}
+            onClick={() =>
+              backfill.mutate(undefined, {
+                onSuccess: (r) =>
+                  setBackfillMsg(
+                    r.updated > 0
+                      ? `${r.updated} pièce(s) du seed taguée(s).`
+                      : "Aucune pièce du seed à taguer — tout est déjà à jour."
+                  ),
+              })
+            }
+          >
+            {backfill.isPending ? "…" : "Appliquer les tags par défaut (pièces du seed)"}
+          </Button>
+          {backfillMsg && <span className="text-sm text-good">{backfillMsg}</span>}
+          <span className="text-xs text-faint">
+            N'affecte que les pièces du seed non taguées — jamais tes ajouts ni tes tags existants.
+          </span>
+        </div>
       </Card>
     </div>
   );

@@ -77,6 +77,44 @@ def test_tempo_progression_points_have_ids(client):
     assert all("id" in pt for pt in grp["points"])
 
 
+def test_backfill_skills_scoped_and_idempotent(client):
+    from app.db import session_scope
+    from app.models import Piece
+    from sqlmodel import select
+
+    # Simulate a pre-phase state: untag one recognised seed piece.
+    with session_scope() as s:
+        seed_piece = s.exec(select(Piece).where(Piece.title == "Fantaisie-impromptu op. 66")).first()
+        seed_piece.skills = []
+        s.add(seed_piece)
+        s.commit()
+        sid = seed_piece.id
+    # A user-added piece (title not in the seed map) with no tags.
+    user = _new_piece(client, title="Ma pièce perso à moi", skills=[])
+
+    r = client.post("/api/pieces/backfill-skills").json()
+    assert r["updated"] >= 1
+    assert client.get(f"/api/pieces/{sid}").json()["skills"] != []  # seed piece re-tagged
+    assert client.get(f"/api/pieces/{user['id']}").json()["skills"] == []  # user piece untouched
+    # Idempotent: nothing left to do.
+    assert client.post("/api/pieces/backfill-skills").json()["updated"] == 0
+
+
+def test_backfill_never_overwrites_existing_tags(client):
+    from app.db import session_scope
+    from app.models import Piece
+    from sqlmodel import select
+
+    with session_scope() as s:
+        p = s.exec(select(Piece).where(Piece.title == "Für Elise (WoO 59)")).first()
+        p.skills = ["voicing"]  # a deliberate custom tag
+        s.add(p)
+        s.commit()
+        pid = p.id
+    client.post("/api/pieces/backfill-skills")
+    assert client.get(f"/api/pieces/{pid}").json()["skills"] == ["voicing"]  # preserved
+
+
 def test_loved_preference(client):
     p = _new_piece(client, title="Loved", loved=True)
     assert p["loved"] is True
