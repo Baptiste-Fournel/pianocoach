@@ -89,3 +89,15 @@ def test_generator_no_4h_cap(client):
     r = client.get("/api/generator/session?total_min=600&weekday=0")
     assert r.status_code == 200
     assert r.json()["total_min"] == 600
+
+
+def test_generator_config_editable_and_persisted(client):
+    cfg = client.get("/api/generator/config").json()
+    assert "w_piece" in cfg and cfg["default_total_min"] == 90
+    # Bump reading, drop fun to zero → session honours the custom split.
+    client.put("/api/generator/config", json={"w_reading": 0.5, "w_fun": 0.0})
+    s = client.get("/api/generator/session?total_min=100&weekday=0").json()
+    blocks = {b["focus"]: b["minutes"] for b in s["blocks"]}
+    assert s["total_min"] == 100
+    assert blocks.get("fun", 0) == 0  # zero-weighted block dropped
+    assert blocks["reading"] >= blocks["piece"]  # reading now weighted higher

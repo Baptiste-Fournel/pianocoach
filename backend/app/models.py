@@ -180,6 +180,22 @@ class Video(SQLModel, table=True):
     analysis_status: str = Field(default="pending", description="pending|analyzing|done|error")
 
 
+class GeneratorConfig(SQLModel, table=True):
+    """Single-row (id=1) user config for the daily session generator: the time
+    split across focus blocks + a default session length. Editable & persisted."""
+
+    __tablename__ = "generator_config"
+
+    id: int | None = Field(default=1, primary_key=True)
+    w_scales: float = 0.15
+    w_etudes: float = 0.15
+    w_reading: float = 0.20
+    w_piece: float = 0.30
+    w_polyrhythm: float = 0.10
+    w_fun: float = 0.10
+    default_total_min: int = 90
+
+
 class ChatMessage(SQLModel, table=True):
     __tablename__ = "chat_messages"
 

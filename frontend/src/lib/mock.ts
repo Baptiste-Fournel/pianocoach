@@ -17,6 +17,18 @@ const store: Record<string, any[]> = {
 };
 let nextId = 10000;
 
+// Generator config is a singleton object (not a collection).
+const demoGenConfig: Any = {
+  id: 1,
+  w_scales: 0.15,
+  w_etudes: 0.15,
+  w_reading: 0.2,
+  w_piece: 0.3,
+  w_polyrhythm: 0.1,
+  w_fun: 0.1,
+  default_total_min: 90,
+};
+
 function match(path: string, re: RegExp) {
   return path.match(re);
 }
@@ -37,6 +49,11 @@ export function mockRequest<T>(method: string, path: string, body?: unknown): Pr
   // Static aggregates
   if (method === "GET" && p === "/dashboard") return resolve(fixtures.dashboard);
   if (method === "GET" && p.startsWith("/generator/session")) return resolve(fixtures.generator);
+  if (p === "/generator/config" && method === "GET") return resolve(demoGenConfig);
+  if (p === "/generator/config" && method === "PUT") {
+    Object.assign(demoGenConfig, body as Any);
+    return resolve(demoGenConfig);
+  }
   if (method === "GET" && p === "/settings") return resolve(fixtures.settings);
   if (method === "GET" && p === "/tempo/progression") return resolve(buildProgression());
   if (method === "GET" && p === "/scales/bpm-history") return resolve([]); // not tracked in demo

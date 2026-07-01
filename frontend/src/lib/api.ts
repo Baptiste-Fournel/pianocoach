@@ -4,6 +4,7 @@ import type {
   ChatMessage,
   Dashboard,
   GeneratedSession,
+  GeneratorConfig,
   Milestone,
   Piece,
   PracticeSession,
@@ -100,6 +101,8 @@ export const api = {
   dashboard: () => get<Dashboard>("/dashboard"),
   generateSession: (totalMin: number, weekday?: number) =>
     get<GeneratedSession>(`/generator/session?total_min=${totalMin}${weekday != null ? `&weekday=${weekday}` : ""}`),
+  getGeneratorConfig: () => get<GeneratorConfig>("/generator/config"),
+  updateGeneratorConfig: (b: Partial<GeneratorConfig>) => request<GeneratorConfig>("PUT", "/generator/config", b),
 
   // Settings
   getSettings: () => get<AppSettings>("/settings"),

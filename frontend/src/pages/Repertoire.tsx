@@ -14,7 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Plus, Target, Trash2 } from "lucide-react";
+import { GripVertical, Heart, Pencil, Plus, Target, Trash2 } from "lucide-react";
 import { Badge, Button, Field, Modal, PageHeader, ProgressBar, Spinner } from "../components/ui";
 import { usePieceMutations, usePieces } from "../lib/queries";
 import { STATUS, TRACKS, frenchDate } from "../lib/format";
@@ -179,6 +179,15 @@ function SortablePiece({ piece, accent, onEdit }: { piece: Piece; accent: string
               ))}
             </select>
             <div className="flex gap-1">
+              <button
+                onClick={() => update.mutate({ id: piece.id, b: { loved: !piece.loved } })}
+                className="btn btn-ghost !p-1.5"
+                style={piece.loved ? { color: "var(--color-accent)" } : undefined}
+                aria-label={piece.loved ? "Retirer des pièces aimées" : "Marquer comme aimée"}
+                title={piece.loved ? "Pièce aimée" : "Marquer comme aimée"}
+              >
+                <Heart size={14} fill={piece.loved ? "currentColor" : "none"} />
+              </button>
               <button onClick={() => onEdit(piece)} className="btn btn-ghost !p-1.5" aria-label="Modifier">
                 <Pencil size={14} />
               </button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Music2,
@@ -11,12 +11,26 @@ import {
   Activity,
   ArrowRight,
   Repeat,
+  SlidersHorizontal,
+  Check,
+  RotateCcw,
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
-import { PageHeader, Card, Spinner, Empty, Button } from "../components/ui";
-import { useGeneratedSession } from "../lib/queries";
+import { PageHeader, Card, SectionTitle, Spinner, Empty, Button } from "../components/ui";
+import { useGeneratedSession, useGeneratorConfig, useUpdateGeneratorConfig } from "../lib/queries";
 import { FOCUS_LABELS, formatMinutes } from "../lib/format";
-import type { FocusArea, GeneratedSession } from "../types";
+import { DEMO } from "../lib/api";
+import type { FocusArea, GeneratedSession, GeneratorConfig } from "../types";
+
+const WEIGHT_FOCUSES: FocusArea[] = ["scales", "etudes", "reading", "piece", "polyrhythm", "fun"];
+const DEFAULT_WEIGHTS: Record<string, number> = {
+  scales: 15,
+  etudes: 15,
+  reading: 20,
+  piece: 30,
+  polyrhythm: 10,
+  fun: 10,
+};
 
 const WEEKDAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 const WEEKDAYS_SHORT = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -55,6 +69,16 @@ export default function Generator() {
   const [weekday, setWeekday] = useState(todayWeekday());
 
   const { data, isLoading, isError } = useGeneratedSession(totalMin, weekday);
+
+  // Initialise the duration from the saved config (once).
+  const { data: config } = useGeneratorConfig();
+  const initedRef = useRef(false);
+  useEffect(() => {
+    if (config && !initedRef.current) {
+      initedRef.current = true;
+      setTotalMin(config.default_total_min);
+    }
+  }, [config]);
 
   return (
     <div className="space-y-6">
@@ -128,6 +152,8 @@ export default function Generator() {
         </div>
       </Card>
 
+      <DistributionEditor />
+
       {isLoading && <Spinner label="Génération de la séance…" />}
       {isError && <Empty>Impossible de générer la séance pour le moment.</Empty>}
 
@@ -135,6 +161,114 @@ export default function Generator() {
         <SessionView data={data} />
       )}
     </div>
+  );
+}
+
+function DistributionEditor() {
+  const { data: config } = useGeneratorConfig();
+  const update = useUpdateGeneratorConfig();
+  const [open, setOpen] = useState(false);
+  const [pct, setPct] = useState<Record<string, number>>({ ...DEFAULT_WEIGHTS });
+  const [defaultMin, setDefaultMin] = useState(90);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!config) return;
+    const raw: Record<string, number> = {
+      scales: config.w_scales,
+      etudes: config.w_etudes,
+      reading: config.w_reading,
+      piece: config.w_piece,
+      polyrhythm: config.w_polyrhythm,
+      fun: config.w_fun,
+    };
+    const sum = Object.values(raw).reduce((a, b) => a + b, 0) || 1;
+    setPct(Object.fromEntries(WEIGHT_FOCUSES.map((f) => [f, Math.round((raw[f] / sum) * 100)])));
+    setDefaultMin(config.default_total_min);
+  }, [config]);
+
+  const total = WEIGHT_FOCUSES.reduce((a, f) => a + (pct[f] ?? 0), 0);
+
+  function save() {
+    if (DEMO) return;
+    update.mutate(
+      {
+        w_scales: pct.scales,
+        w_etudes: pct.etudes,
+        w_reading: pct.reading,
+        w_piece: pct.piece,
+        w_polyrhythm: pct.polyrhythm,
+        w_fun: pct.fun,
+        default_total_min: defaultMin,
+      } as Partial<GeneratorConfig>,
+      { onSuccess: () => { setSaved(true); window.setTimeout(() => setSaved(false), 2500); } }
+    );
+  }
+
+  return (
+    <Card>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-start justify-between text-left gap-3">
+        <SectionTitle
+          title="Répartition du temps"
+          subtitle="Personnalise le poids de chaque bloc — sauvegardé et réutilisé chaque jour."
+        />
+        <SlidersHorizontal size={18} className="text-muted shrink-0 mt-1" />
+      </button>
+      {open && (
+        <div className="mt-2 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {WEIGHT_FOCUSES.map((f) => (
+              <label key={f} className="flex items-center gap-3">
+                <span className="w-28 text-sm text-muted">{FOCUS_LABELS[f]}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={60}
+                  step={1}
+                  value={pct[f] ?? 0}
+                  disabled={DEMO}
+                  onChange={(e) => setPct((p) => ({ ...p, [f]: Number(e.target.value) }))}
+                  className="flex-1 accent-[var(--color-primary)]"
+                />
+                <span className="w-10 text-right text-sm tabular-nums">{pct[f] ?? 0}%</span>
+              </label>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <span className={total === 100 ? "text-muted" : "text-warn"}>
+              Total : {total}%{total !== 100 && " — normalisé automatiquement"}
+            </span>
+            <label className="flex items-center gap-2 text-muted">
+              Durée par défaut
+              <input
+                type="number"
+                min={10}
+                max={1440}
+                value={defaultMin}
+                disabled={DEMO}
+                onChange={(e) => setDefaultMin(Number(e.target.value) || 0)}
+                className="input w-24 py-1 px-2"
+              />
+              min
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={save} disabled={DEMO || update.isPending}>
+              {update.isPending ? "Enregistrement…" : "Enregistrer la répartition"}
+            </Button>
+            <Button variant="ghost" onClick={() => setPct({ ...DEFAULT_WEIGHTS })} disabled={DEMO}>
+              <RotateCcw size={14} /> Défauts
+            </Button>
+            {saved && (
+              <span className="inline-flex items-center gap-1 text-sm text-good">
+                <Check size={15} /> Enregistré
+              </span>
+            )}
+            {DEMO && <span className="text-xs text-faint">Lecture seule en démo</span>}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 

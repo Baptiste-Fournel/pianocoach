@@ -28,6 +28,7 @@ export interface Piece {
   target_tempo: number | null;
   current_clean_tempo: number | null;
   order_index: number;
+  loved: boolean;
   notes: string;
 }
 
@@ -187,6 +188,17 @@ export interface Dashboard {
   scale_bpm: { key: string; type: string; current_bpm: number | null; target_bpm: number; mastered: boolean }[];
   repertoire_counts: { target: number; in_progress: number; planned: number; learned: number };
   milestone_progress: { done: number; total: number };
+}
+
+export interface GeneratorConfig {
+  id: number;
+  w_scales: number;
+  w_etudes: number;
+  w_reading: number;
+  w_piece: number;
+  w_polyrhythm: number;
+  w_fun: number;
+  default_total_min: number;
 }
 
 export interface SessionBlock {

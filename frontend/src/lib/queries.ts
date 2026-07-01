@@ -113,6 +113,18 @@ export const useGeneratedSession = (totalMin: number, weekday?: number) =>
     queryKey: ["generator", totalMin, weekday],
     queryFn: () => api.generateSession(totalMin, weekday),
   });
+export const useGeneratorConfig = () =>
+  useQuery({ queryKey: ["generator-config"], queryFn: api.getGeneratorConfig });
+export function useUpdateGeneratorConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.updateGeneratorConfig,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["generator-config"] });
+      qc.invalidateQueries({ queryKey: ["generator"] });
+    },
+  });
+}
 
 // ---- Chat ----
 export const useChatMessages = (cid = "default") =>
