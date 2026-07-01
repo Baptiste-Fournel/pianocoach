@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { Trash2, Plus, Music2 } from "lucide-react";
+import { Trash2, Plus, Music2, Piano } from "lucide-react";
 import {
   PageHeader,
   Card,
@@ -26,6 +26,7 @@ import {
 import { useScales, useScaleBpmHistory, useScaleMutations } from "../lib/queries";
 import { CHART_COLORS, frenchDate, noteFr, noteToCanonical, shortDate } from "../lib/format";
 import { DEMO } from "../lib/api";
+import { ScaleVerify } from "../components/ScaleVerify";
 import type { Scale, ScaleType, Hands } from "../types";
 
 const SCALE_TYPE_LABELS: Record<ScaleType, string> = {
@@ -66,6 +67,7 @@ export default function Scales() {
   const { create, update, remove } = useScaleMutations();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [verifyScale, setVerifyScale] = useState<Scale | null>(null);
   const [form, setForm] = useState<{ key: string; type: ScaleType; hands: Hands; target_bpm: number }>({
     key: "Do",
     type: "major",
@@ -254,19 +256,31 @@ export default function Scales() {
                       </td>
                       <td className="py-2.5 pr-3 text-faint whitespace-nowrap">{frenchDate(s.last_practiced)}</td>
                       <td className="py-2.5 text-right">
-                        <Button
-                          variant="ghost"
-                          className="!px-2 !py-1 text-bad"
-                          disabled={DEMO}
-                          aria-label={`Supprimer la gamme ${noteFr(s.key)}`}
-                          onClick={() => {
-                            if (window.confirm(`Supprimer la gamme ${noteFr(s.key)} ${SCALE_TYPE_LABELS[s.type]} ?`)) {
-                              remove.mutate(s.id);
-                            }
-                          }}
-                        >
-                          <Trash2 size={15} />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            className="!px-2 !py-1"
+                            disabled={DEMO}
+                            aria-label={`Vérifier la gamme ${noteFr(s.key)} au piano`}
+                            title="Vérifier au piano (MIDI)"
+                            onClick={() => setVerifyScale(s)}
+                          >
+                            <Piano size={15} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="!px-2 !py-1 text-bad"
+                            disabled={DEMO}
+                            aria-label={`Supprimer la gamme ${noteFr(s.key)}`}
+                            onClick={() => {
+                              if (window.confirm(`Supprimer la gamme ${noteFr(s.key)} ${SCALE_TYPE_LABELS[s.type]} ?`)) {
+                                remove.mutate(s.id);
+                              }
+                            }}
+                          >
+                            <Trash2 size={15} />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -410,6 +424,8 @@ export default function Scales() {
           </div>
         </form>
       </Modal>
+
+      {verifyScale && <ScaleVerify scale={verifyScale} onClose={() => setVerifyScale(null)} />}
     </div>
   );
 }

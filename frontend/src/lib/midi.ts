@@ -76,3 +76,15 @@ export function blackLeftPct(note: number, layout: KeyboardLayout): number {
 export function displayRange(connected: boolean): { low: number; high: number } {
   return connected ? FULL_KEYBOARD : COMPACT_KEYBOARD;
 }
+
+const LETTER_PC: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+/** Pitch class (0-11) of a canonical English key like "C", "F#", "Bb". */
+export function keyToPitchClass(key: string): number | null {
+  const m = key.trim().match(/^([A-Ga-g])\s*([#♯b♭]?)/);
+  if (!m) return null;
+  let pc = LETTER_PC[m[1].toUpperCase()];
+  if (m[2] === "#" || m[2] === "♯") pc += 1;
+  else if (m[2] === "b" || m[2] === "♭") pc -= 1;
+  return ((pc % 12) + 12) % 12;
+}

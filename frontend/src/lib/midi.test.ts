@@ -5,6 +5,7 @@ import {
   blackLeftPct,
   displayRange,
   isBlackKey,
+  keyToPitchClass,
   keyboardLayout,
   noteName,
   noteNameShort,
@@ -81,5 +82,14 @@ describe("keyboard layout", () => {
   it("displayRange switches full ↔ compact with connection", () => {
     expect(displayRange(true)).toEqual(FULL_KEYBOARD);
     expect(displayRange(false)).toEqual(COMPACT_KEYBOARD);
+  });
+
+  it("keyToPitchClass parses naturals, sharps and flats", () => {
+    expect(keyToPitchClass("C")).toBe(0);
+    expect(keyToPitchClass("A")).toBe(9);
+    expect(keyToPitchClass("F#")).toBe(6);
+    expect(keyToPitchClass("Bb")).toBe(10);
+    expect(keyToPitchClass("H")).toBeNull(); // not a note letter
+    expect(keyToPitchClass("")).toBeNull();
   });
 });
